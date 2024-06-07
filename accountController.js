@@ -21,7 +21,7 @@ router.get('/', function(req, res) {
 });
 
 router.post('/createAccount',async function(req, res) {
-  // 
+  // //
       var DateString = new Date().toLocaleDateString('en-GB');
       var isoDateString = new Date().toISOString();
       let bodyOfRequest = req.body;
