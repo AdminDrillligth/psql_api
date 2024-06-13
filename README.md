@@ -9,4 +9,14 @@
   <a target="_blank" href="https://devserver.drilllight.com">https://devserver.drilllight.com
   </a>
 </h3>
+
+<p>/account</p>
+<p>/econes</p>
+<p>/exercise</p>
+<p>/firmware</p>
+<p>/result</p>
+<p>/token</p>
+
+
+
 </div>
