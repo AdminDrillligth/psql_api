@@ -4,5 +4,5 @@
   <p>[briefly describe yourself and your interests]</p>
 
 
-  <a href="https://www.drilllight.com/"><img src="" alt="Logo Drilllight"/></a>
+  <a  target="_blank" href="https://www.drilllight.com/"><img src="" alt="Logo Drilllight"/</a>
 </div>
