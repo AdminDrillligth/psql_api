@@ -9,13 +9,13 @@
   <a target="_blank" href="https://devserver.drilllight.com">https://devserver.drilllight.com
   </a>
 </h3>
-
-<p>/account</p>
-<p>/econes</p>
-<p>/exercise</p>
-<p>/firmware</p>
-<p>/result</p>
-<p>/token</p>
+<h5>Les sous chemins, d'accès principaux sont : </h5>
+<p >/account</p>
+<p >/econes</p>
+<p >/exercise</p>
+<p >/firmware</p>
+<p >/result</p>
+<p >/token</p>
 
 
 
