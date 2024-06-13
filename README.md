@@ -10,12 +10,12 @@
   </a>
 </h3>
 <h5>Les sous chemins, d'accès principaux sont : </h5>
-<p >/account</p>
-<p >/econes</p>
-<p >/exercise</p>
-<p >/firmware</p>
-<p >/result</p>
-<p >/token</p>
+<p align="left">/account</p>
+<p align="left">/econes</p>
+<p align="left">/exercise</p>
+<p align="left">/firmware</p>
+<p align="left">/result</p>
+<p align="left">/token</p>
 
 
 
