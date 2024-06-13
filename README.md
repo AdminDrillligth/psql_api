@@ -4,7 +4,5 @@
   <p>[briefly describe yourself and your interests]</p>
 
 
-    <a href="[link to your Medium profile]">
-    <img src="" alt="Logo Drilllight"/>
-    </a>
+  <a href="https://www.drilllight.com/"><img src="" alt="Logo Drilllight"/></a>
 </div>
