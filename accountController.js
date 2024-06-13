@@ -199,8 +199,9 @@ router.post('/createAccount',async function(req, res) {
               const resp = pool.query( "INSERT INTO account_handler ( id, role, owner, email, passwordhash, firstname, familyname, fullname , personalinfo, privileges, users, staff, econes, trainings, videos, licensed, warning, date, dateiso, update, updateiso, privateonly ) VALUES ($1, $2,$3, $4,$5, $6,$7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22) RETURNING *",
                 [userObject.id,  userObject.role, userObject.owner, userObject.email, userObject.passwordHash, userObject.firstName, userObject.familyName, userObject.fullName , userObject.personalInfo, userObject.privileges, userObject.users, userObject.staff, userObject.econes, userObject.trainings, userObject.videos, userObject.licensed, userObject.warning, userObject.date, userObject.dateIso, userObject.update, userObject.updateIso, userObject.privateOnly ]
               , (error, results) => {if (error) { throw error }
-                console.log(`User added with ID: ${results.rows[0].id}`);
-                // console.log(userObject);
+              if(results){
+                
+                // console.log(`User added with ID: ${results.rows[0].id}`);
                 res.status(200).json({
                   response: {
                     result: 'success',
@@ -208,8 +209,15 @@ router.post('/createAccount',async function(req, res) {
                   },
                   account: userObject
                 });
+              }
+               
+                // console.log(userObject);
+             
               });
+           
+
             }
+            
            }
         })
 

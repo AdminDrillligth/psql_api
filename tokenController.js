@@ -134,6 +134,13 @@ router.get('/validateToken', function(req, res) {
                },
              });
             })
+          }else{
+            res.status(200).json({
+              response: {
+                result:'errorNoAccount',
+                message:'aucun utilisateur'
+              },
+            });
           }
         }
       })
