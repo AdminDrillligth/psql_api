@@ -1,7 +1,6 @@
 <div id="header" align="center">
   <h1>Drilllight API Linux : </h1>
-  <img src="[insert an image of yourself or something you like]" width="200" />
-  <p>[briefly describe yourself and your interests]</p>
+  <p>Cette api, est une copie de l’ancienne API, basée sur Firebase, sous la DataBase PostGreSql, les end points sont les mêmes en terminologie, des accès Url ont été classifiés, selon les groupes distincts des différentes requêtes</p>
 
 
   <a  target="_blank" href="https://www.drilllight.com/"><img src="https://github.com/AdminDrillligth/psql_api/blob/main/1679301504964.jpeg" alt="Site officiel" /></a>
