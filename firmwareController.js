@@ -173,7 +173,16 @@ router.get('/getFirmware', function(req, res) {
         });
        }else {
         // no error token
-
+        return res.status(200).json({
+          response: {
+            result:'success',
+            message:''
+          }
+          // firmwareList:firmwareList
+          // idUser:idUser,
+          // lastPublicFirmwareChangeCount:lastPublicFirmwareChangeCount,
+          // firmwareDetail:firmwareDetail
+        });
        }
     })
   }catch(error){
@@ -223,6 +232,7 @@ router.get('/getFirmwaresList', function(req, res) {
         
     }
   });
+  
   }
   catch(error) { return res.status(500).json(error.message) }
 });
@@ -254,15 +264,15 @@ router.get('/getFirmwareDetails', function(req, res) {
               console.log(error)
             }
             firm = selectFirmware.rows[0];
-            let selectFirmware = {creationDate: firm.firmwaredata.firmwareObject.creationdate, firmwareData:firm.firmwaredata.firmwareObject.firmwaredata, description: firm.firmwaredata.firmwareObject.description,id:firm.firmwaredata.firmwareObject.id, version: firm.firmwaredata.firmwareObject.version}
-            console.log('Result global detail', globalFirm.id)
-            console.log('Result global detail')
+            // let selectFirmware = {creationDate: firm.firmwaredata.firmwareObject.creationdate, firmwareData:firm.firmwaredata.firmwareObject.firmwaredata, description: firm.firmwaredata.firmwareObject.description,id:firm.firmwaredata.firmwareObject.id, version: firm.firmwaredata.firmwareObject.version}
+            // console.log('Result global detail', globalFirm.id)
+            // console.log('Result global detail')
             return res.status(200).json({
               response: {
                 result:'success',
                 message:''
               },  
-              globalFirmware:selectFirmware
+              // globalFirmware:selectFirmware
             });
           })
           

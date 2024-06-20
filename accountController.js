@@ -277,18 +277,27 @@ router.get('/getAccountDetails', function(req, res) {
                           console.log(error)
                         }
                         validateUser = false;
-                        console.log('RESULT USERS OF GET DETAILS :  passwordhash??! ', resultsUser.rows[0].passwordhash ,'color: #bada55')
+                        console.log('password Hash????? ')
+
                         // console.log(resultsUser.rows[0].passwordhash)
-                        if(resultsUser.rows[0].passwordhash !== undefined){
-                          validateUser = true;
+                        if(resultsUser.rows !== undefined){
+                          if(resultsUser.rows[0] !== undefined){
+                            if(resultsUser.rows[0].passwordhash !== undefined){
+                              console.log('RESULT USERS OF GET DETAILS :  passwordhash??! ', resultsUser.rows[0].passwordhash )
+                              validateUser = true;
+                            }
+                            console.log('RESULT USERS OF GET DETAILS :  ! ', resultsUser.rows[0].id)
+                            accountUsers.push({validate:validateUser, id: resultsUser.rows[0].id, email:resultsUser.rows[0].email, fullName:resultsUser.rows[0].fullname,familyName:resultsUser.rows[0].familyname, firstName: resultsUser.rows[0].firstname, role: resultsUser.rows[0].role });
+                            
+                            delete results.rows[0].passwordhash;
+                            console.log('RESULT OBJECT OF ACCOUNT USERS OF ACCOUNT:  ! ', accountUsers)
+                          }
+                          
                         }
-                        console.log('RESULT USERS OF GET DETAILS :  ! ', resultsUser.rows[0].id)
-                        accountUsers.push({validate:validateUser, id: resultsUser.rows[0].id, email:resultsUser.rows[0].email, fullName:resultsUser.rows[0].fullname,familyName:resultsUser.rows[0].familyname, firstName: resultsUser.rows[0].firstname, role: resultsUser.rows[0].role });
-                        
-                        delete results.rows[0].passwordHash;
+                       
                       });     
                     });
-                    console.log('RESULT OBJECT OF ACCOUNT USERS OF ACCOUNT:  ! ', accountUsers)
+                   
                    }
                    
                    res.status(200).json({
@@ -402,6 +411,7 @@ router.get('/getAccountsList', function(req, res) {
                   // console.log(results)
                   accountsAdminsOwners = []
                   const resSelect = await pool.query("SELECT * FROM account_handler WHERE role IN ('admin','owner')", (error, results) => {
+                    console.log('on a recup les admins et les owners')
                     if (error) {
                       console.log(error)
                     }
@@ -417,7 +427,8 @@ router.get('/getAccountsList', function(req, res) {
                       }
                       // console.log('LENGTH USERS :  ! ',account.id, usersAccount)
                       let validate = false;
-                      if(account.passwordHash !== undefined){
+                      console.log('details account',account)
+                      if(account.passwordhash !== undefined){
                         validate = true;
                       }
                       // UsersOfAccount.push({

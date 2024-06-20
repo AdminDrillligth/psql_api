@@ -26,6 +26,17 @@ router.get('/', function(req, res) {
 });
 
 
+router.get('/getResultsList', function(req, res) {
+	console.log('result')
+  res.status(200).json({
+       response: {
+          result: 'success',
+          message: ''
+       },
+  });
+});
+
+
 
 
 

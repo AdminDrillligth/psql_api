@@ -46,6 +46,7 @@ router.post('/createExercise', function(req, res) {
               },
             });
            }else {
+            console.log('ID DU USER : mode Private ! ',json.id)
             console.log('JSON du create : ! ',json);
             console.log('JSON modified : ! ',json.header.modified);
             console.log('JSON status : ! ',json.header.status);
@@ -54,37 +55,54 @@ router.post('/createExercise', function(req, res) {
             json.header.modified = isoDateString;
             // json.header.id = newUuid;
             delete json.selected;
+
+            ////
+            // PUBLIC MODE
+            ////
+
             if(json.header.status === 'public'){
-              const resSelect = await pool.query('SELECT lastpublicchangecount FROM global_handler', async (error, results) => {
+              const resSelect = await pool.query('SELECT "lastPublicChangeCount" FROM global_handler', async (error, results) => {
                 if (error) {
                   console.log(error)
+                  // res.status(400).json({
+                  //   response: {
+                  //     result: 'errorRequest',
+                  //     message: error
+                  //   }
+                  // });
                 }
-                console.log('lastpublicchangecount : !', results.rows[0].lastpublicchangecount)
-                results.rows[0].lastpublicchangecount = results.rows[0].lastpublicchangecount +1;
-                const res = pool.query('UPDATE global_handler SET lastpublicchangecount = $1 WHERE id = $2',
-                [results.rows[0].lastpublicchangecount, '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d'],
+                console.log('lastpublicchangecount : !', results.rows[0].lastPublicChangeCount)
+                results.rows[0].lastPublicChangeCount = results.rows[0].lastPublicChangeCount +1;
+                const res = pool.query('UPDATE global_handler SET "lastPublicChangeCount" = $1 WHERE id = $2',
+                [results.rows[0].lastPublicChangeCount, '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d'],
                 (error, results) => {
                   if (error) {
                     console.log(error)
+                    // res.status(400).json({
+                    //   response: {
+                    //     result: 'errorRequest',
+                    //     message: error
+                    //   }
+                    // });
+
                   }
-                  console.log('User modified with ID:',results.rows)
+                  else{
+                    if(results.rows !== undefined){
+                      console.log('User modified with ID:',results.rows)
+                    }
+                  }
+               
                 })
               });
-            }
-            if(json.header.status === 'private'){
-              // const updateSelectedExercise = pool.query('UPDATE account_handler SET trainings = $1 WHERE id = $2',
-              // [userDetailOwner.users, dataBodyOfRequest.owner],
-              // (error, results) => {
-              //   if (error) {
-              //     throw error
-              //   }
-              //   console.log('User modified with ID:',results.rows)
-              // })
-            }
-            const resp = pool.query( "INSERT INTO exercise_handler ( id, header, steps, status ) VALUES ($1, $2, $3, $4) RETURNING *",
-                [json.header.id, json.header, json.steps, json.header.status]
-              , (error, results) => {if (error) { console.log(error) }
-                console.log(`User added with ID: ${results}`);
+
+                 //  --> Go test public right now !
+              const resp = pool.query( "INSERT INTO public_exercise_handler (  header, id, steps, status ) VALUES ($1, $2, $3, $4) RETURNING *",
+                [ json.header, json.header.id, json.steps, json.header.status]
+              , (error, results) => {if (error) { 
+                console.log(error)
+               }
+               if(results.rows !== undefined){
+                console.log(`Exercise added with ID: ${results.rows}`);
                 res.status(200).json({
                   response: {
                     result: 'success',
@@ -93,7 +111,138 @@ router.post('/createExercise', function(req, res) {
                   // id:newUuid,
                   json:json
                 });
+               }
+                
               });
+            }
+
+            ////
+            // PRIVATE MODE
+            ////
+
+            if(json.header.status === 'private'){
+              if(json.header.owner.id !== undefined){
+                console.log('private');
+                console.log('ID DU USER : mode Private ! ',json.header.owner.id)
+                //  --> Go private right now !
+                pool.query('SELECT "privateexerciseschangecount" FROM account_handler WHERE id = $1',[json.header.owner.id], async (error, resultsprivateexerciseschangecount) => {
+                  if (error) {
+  
+                  }else{
+                    console.log('resultsprivateexerciseschangecount : !',resultsprivateexerciseschangecount.rows[0].privateexerciseschangecount)
+                    if(resultsprivateexerciseschangecount.rows !== undefined){
+                      // if privateexerciseschangecount exist
+                      resultsprivateexerciseschangecount.rows[0].privateexerciseschangecount = resultsprivateexerciseschangecount.rows[0].privateexerciseschangecount + 1
+                      const resp = pool.query( "INSERT INTO private_exercise_handler (  header, id, steps, status ) VALUES ($1, $2, $3, $4) RETURNING *",
+                        [ json.header, json.header.id, json.steps, json.header.status]
+                      , (error, results) => {if (error) { 
+                        console.log(error)
+                      }
+                      if(results.rows !== undefined){
+                        // Si l'exercice à bien été ajouté
+                        console.log(`Exercise added with ID: ${results.rows}`);
+                        pool.query('UPDATE account_handler SET "privateexerciseschangecount" = $1 WHERE id = $2',
+                          [resultsprivateexerciseschangecount.rows[0].privateexerciseschangecount, json.header.owner.id],
+                          (error, results) => {
+                            if (error) {
+                              console.log(error)
+                              // res.status(400).json({
+                              //   response: {
+                              //     result: 'errorRequest',
+                              //     message: error
+                              //   }
+                              // });
+          
+                            }
+                            else{
+                              if(results.rows !== undefined){
+                                // console.log('User modified with ID:',results.rows)
+                              }
+                            }
+                         
+                          })
+                        res.status(200).json({
+                          response: {
+                            result: 'success',
+                            message: ''
+                          },
+                          // id:newUuid,
+                          json:json
+                        });
+                      }
+                        
+                      });
+                    }else{
+                      const resp = pool.query( "INSERT INTO private_exercise_handler (  header, id, steps, status, owner ) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+                        [ json.header, json.header.id, json.steps, json.header.status, json.header.owner.id]
+                      , (error, results) => {if (error) { 
+                        console.log(error)
+                      }
+                      if(results.rows !== undefined){
+                        res.status(200).json({
+                          response: {
+                            result: 'success',
+                            message: ''
+                          },
+                          json:json
+                        });
+                        pool.query('UPDATE account_handler SET "privateexerciseschangecount" = $1 WHERE id = $2',
+                          [1, json.header.owner.id],
+                          (error, results) => {
+                            if (error) {
+                              console.log(error)
+                              // res.status(400).json({
+                              //   response: {
+                              //     result: 'errorRequest',
+                              //     message: error
+                              //   }
+                              // });
+          
+                            }
+                            else{
+                              if(results.rows !== undefined){
+                                // console.log('User modified with ID:',results.rows)
+                              }
+                            }
+                         
+                          })
+                      }
+                    })
+                     
+                    
+                    }
+                    
+                   
+                  }
+                });
+                // const updateSelectedExercise = pool.query('UPDATE account_handler SET trainings = $1 WHERE id = $2',
+                // [userDetailOwner.users, dataBodyOfRequest.owner],
+                // (error, results) => {
+                //   if (error) {
+                //     throw error
+                //   }
+                //   console.log('User modified with ID:',results.rows)
+                // })
+                
+              }else{
+                res.status(200).json({
+                  response: {
+                    result: 'errorNoOwnerId',
+                    message: ''
+                  }
+                });
+              }
+
+            }else{
+              res.status(200).json({
+                response: {
+                  result: 'errorBadStatus',
+                  message: "Le status de l\'exercice n'est pas public ou privé"
+                },
+                json:json
+              });
+            }
+            
            }
     })
   } catch(error) { return res.status(500).json(error.message) } 
@@ -115,7 +264,7 @@ router.get('/getExercisesList', async function(req, res) {
   userDetail  = undefined;
   let globalHandler = [];
   let lastPublicChangeCount="";
-  let privatechanged = false;
+  let privateChanged = false;
   let publicChanged = false;
   let privateOnly = false;
   console.log('TOKEN EX LIST: ',token)
@@ -134,9 +283,15 @@ router.get('/getExercisesList', async function(req, res) {
           },
         });
       }else {
-        pool.query('SELECT * FROM account_handler WHERE id = $1',[idUser], (error, resultsUser) => {
+        pool.query('SELECT * FROM account_handler WHERE id = $1',[idUser], async (error, resultsUser) => {
           if (error) {
             console.log(error)
+            res.status(400).json({
+              response: {
+                result: 'errorRequest',
+                message: error
+              }
+            });
           }
           if(resultsUser.rowCount === 0){
             console.log('account owner ?')
@@ -151,20 +306,552 @@ router.get('/getExercisesList', async function(req, res) {
             userDetail = resultsUser.rows[0];
             console.log('If private only ?',userDetail.privateonly)
             console.log('List of selected trainings :',userDetail.trainings)
-
-            if(userDetail.trainings !== undefined){
+            console.log("privateexerciseschangecount :: ! ", userDetail.privateexerciseschangecount )
+            if(userDetail.trainings !== undefined ){
                       if(userDetail.trainings.length > 0){
                     //     // If user have a selected exercises
                          userDetail.trainings.forEach(training => {
                           console.log('Details id : ', training)            
-                          pool.query('SELECT * FROM exercise_handler WHERE id = $1',[training], async (error, resultsExercise) => {
+                          pool.query('SELECT * FROM public_exercise_handler WHERE id = $1',[training], async (error, resultsExercise) => {
                             if (error) {
                               console.log(error)
+                              // res.status(400).json({
+                              //   response: {
+                              //     result: 'errorRequest',
+                              //     message: error
+                              //   }
+                              // });
                             }
                             console.log('RESULT OF USER SELECTED TRAININGS : ! ',resultsExercise)
                           })
+
+
                        }) 
                     }
+                    else{
+                      // Si le tableau user est vide
+
+                      if(userDetail.privateonly){
+                        // Si le user est en exos privé uniquement
+                        if(userDetail.privateexerciseschangecount > privateExercisesChangeCount){
+                          privateChanged = true;
+                          pool.query('SELECT * FROM private_exercise_handler WHERE owner = $1',[idUser], async (error, resultsPrivateExercise) => {
+                            if (error) {
+                              console.log(error)
+                              // res.status(400).json({
+                              //   response: {
+                              //     result: 'errorRequest',
+                              //     message: error
+                              //   }
+                              // });
+                            }
+                            console.log('RESULT OF Private TRAININGS : ! ',resultsPrivateExercise.rows[0])
+                            return res.status(200).json({
+                              response: {
+                                result:'success',
+                                message:''
+                              },
+                              publicChanged:false,
+                              privateChanged:privateChanged,
+                            });
+                          })
+                        }
+                        if(userDetail.privateexerciseschangecount < privateExercisesChangeCount){
+                          privateChanged = false;
+                          return res.status(200).json({
+                            response: {
+                              result:'success',
+                              message:''
+                            },
+                            publicChanged:false,
+                            privateChanged:privateChanged,
+                          });
+                        }
+                        if(userDetail.privateexerciseschangecount === privateExercisesChangeCount){
+                          privateChanged = false;
+                          return res.status(200).json({
+                            response: {
+                              result:'success',
+                              message:''
+                            },
+                            publicChanged:false,
+                            privateChanged:privateChanged,
+                          });
+                        }
+                        
+                       
+                      }else{
+                        // Si il n'est pas uniquement en exos privé
+                        console.log('not private only')
+
+                         const lastpublicchangecount = await pool.query('SELECT "lastPublicChangeCount" FROM global_handler', async (error, lastpublicchangecount) => {
+                          if (error) {
+                            console.log(error)
+                            // res.status(400).json({
+                            //   response: {
+                            //     result: 'errorRequest',
+                            //     message: error
+                            //   }
+                            // });
+                
+                          }
+                          else{
+                            if(lastpublicchangecount.rows !== undefined){
+                              // si nous avons bien un résultat dans le global handler
+                              console.log('result after get last result !!! ')
+                              console.log('result lastpublicchangecount : ', lastpublicchangecount.rows[0].lastPublicChangeCount , 'le send is : ', publicExercisesChangeCount)
+                              if(lastpublicchangecount.rows[0].lastPublicChangeCount > publicExercisesChangeCount){
+                                publicChanged = true;                                
+                                const resSelect = await pool.query('SELECT * FROM public_exercise_handler WHERE status = $1',['public'], async (error, resultsExercisePublic) => {
+                                  if (error) {
+                                    console.log(error)
+                                    // res.status(400).json({
+                                    //   response: {
+                                    //     result: 'errorRequest',
+                                    //     message: error
+                                    //   }
+                                    // });
+                                  }
+                                  if(userDetail.privateexerciseschangecount > privateExercisesChangeCount){
+                                    privateChanged = true;
+                                    pool.query('SELECT * FROM private_exercise_handler WHERE owner = $1', [idUser], async (error, resultsPrivateExercise) => {
+                                      if (error) {
+                                        console.log(error);
+                                        // res.status(400).json({
+                                        //   response: {
+                                        //     result: 'errorRequest',
+                                        //     message: error
+                                        //   }
+                                        // });
+                                      }
+                                      console.log('RESULT OF Private TRAININGS : ! ', resultsPrivateExercise.rows[0]);
+                                      return res.status(200).json({
+                                        response: {
+                                          result:'success',
+                                          message:''
+                                        },
+                                        publicExercises:resultsExercisePublic.rows,
+                                        privateExercises:resultsPrivateExercise.rows,
+                                        publicChanged:publicChanged,
+                                        privateChanged:privateChanged,
+                                        publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
+                                        privateExercisesChangeCount:userDetail.privateexerciseschangecount
+                                        // idUser:idUser,
+                                      });
+                                      
+                                    })
+                                  }
+                                  if(userDetail.privateexerciseschangecount < privateExercisesChangeCount){
+                                    privateChanged = false;
+                                    return res.status(200).json({
+                                      response: {
+                                        result:'success',
+                                        message:''
+                                      },
+                                      publicExercises:resultsExercisePublic.rows,
+                                      privateExercises:[],
+                                      publicChanged:publicChanged,
+                                      privateChanged:privateChanged,
+                                      publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
+                                      privateExercisesChangeCount:userDetail.privateexerciseschangecount
+                                      // idUser:idUser,
+                                    });
+                                  }
+                                  if(userDetail.privateexerciseschangecount === privateExercisesChangeCount){
+                                    privateChanged = false;
+                                    return res.status(200).json({
+                                      response: {
+                                        result:'success',
+                                        message:''
+                                      },
+                                      publicExercises:resultsExercisePublic.rows,
+                                      privateExercises:[],
+                                      publicChanged:publicChanged,
+                                      privateChanged:privateChanged,
+                                      publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
+                                      privateExercisesChangeCount:userDetail.privateexerciseschangecount
+                                      // idUser:idUser,
+                                    });
+                                  }
+                                });
+                              }
+                              if(lastpublicchangecount.rows[0].lastPublicChangeCount < publicExercisesChangeCount){
+                                publicChanged = false;
+                                if(userDetail.privateexerciseschangecount > privateExercisesChangeCount){
+                                  privateChanged = true;
+                                  pool.query('SELECT * FROM private_exercise_handler WHERE owner = $1',[idUser], async (error, resultsPrivateExercise) => {
+                                    if (error) {
+                                      console.log(error)
+                                      // res.status(400).json({
+                                      //   response: {
+                                      //     result: 'errorRequest',
+                                      //     message: error
+                                      //   }
+                                      // });
+                                    }
+
+                                    console.log('RESULT OF Private TRAININGS : ! ',resultsPrivateExercise.rows[0])
+                                    return res.status(200).json({
+                                      response: {
+                                        result:'success',
+                                        message:''
+                                      },
+                                      publicExercises:[],
+                                      privateExercises:resultsPrivateExercise.rows,
+                                      publicChanged:publicChanged,
+                                      privateChanged:privateChanged,
+                                      publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
+                                      privateExercisesChangeCount:userDetail.privateexerciseschangecount
+                                      // idUser:idUser,
+                                    });
+                                  })
+                                }
+                                if(userDetail.privateexerciseschangecount < privateExercisesChangeCount){
+                                  privateChanged = false;
+                                  return res.status(200).json({
+                                    response: {
+                                      result:'success',
+                                      message:''
+                                    },
+                                    publicExercises:[],
+                                    privateExercises:[],
+                                    publicChanged:publicChanged,
+                                    privateChanged:privateChanged,
+                                    publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
+                                    privateExercisesChangeCount:userDetail.privateexerciseschangecount
+                                    // idUser:idUser,
+                                  });
+                                  
+                                }
+                                if(userDetail.privateexerciseschangecount === privateExercisesChangeCount){
+                                  privateChanged = false;
+                                  return res.status(200).json({
+                                    response: {
+                                      result:'success',
+                                      message:''
+                                    },
+                                    publicExercises:[],
+                                    privateExercises:[],
+                                    publicChanged:publicChanged,
+                                    privateChanged:privateChanged,
+                                    publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
+                                    privateExercisesChangeCount:userDetail.privateexerciseschangecount
+                                    // idUser:idUser,
+                                  });
+                                }
+                               
+                              }
+                              if(lastpublicchangecount.rows[0].lastPublicChangeCount === publicExercisesChangeCount){
+                                publicChanged = false;
+                                if(userDetail.privateexerciseschangecount > privateExercisesChangeCount){
+                                  privateChanged = true;
+                                  pool.query('SELECT * FROM private_exercise_handler WHERE owner = $1',[idUser], async (error, resultsPrivateExercise) => {
+                                    if (error) {
+                                      console.log(error)
+                                      // res.status(400).json({
+                                      //   response: {
+                                      //     result: 'errorRequest',
+                                      //     message: error
+                                      //   }
+                                      // });
+                                    }
+
+                                    console.log('RESULT OF Private TRAININGS : ! ',resultsPrivateExercise.rows[0])
+                                    return res.status(200).json({
+                                      response: {
+                                        result:'success',
+                                        message:''
+                                      },
+                                      publicExercises:[],
+                                      privateExercises:resultsPrivateExercise.rows,
+                                      publicChanged:publicChanged,
+                                      privateChanged:privateChanged,
+                                      publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
+                                      privateExercisesChangeCount:userDetail.privateexerciseschangecount
+                                      // idUser:idUser,
+                                    });
+                                  })
+                                }
+                                if(userDetail.privateexerciseschangecount < privateExercisesChangeCount){
+                                  privateChanged = false;
+                                  return res.status(200).json({
+                                    response: {
+                                      result:'success',
+                                      message:''
+                                    },
+                                    publicExercises:[],
+                                    privateExercises:[],
+                                    publicChanged:publicChanged,
+                                    privateChanged:privateChanged,
+                                    publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
+                                    privateExercisesChangeCount:userDetail.privateexerciseschangecount
+                                    // idUser:idUser,
+                                  });
+                                }
+                                if(userDetail.privateexerciseschangecount === privateExercisesChangeCount){
+                                  privateChanged = false;
+                                  return res.status(200).json({
+                                    response: {
+                                      result:'success',
+                                      message:''
+                                    },
+                                    publicExercises:[],
+                                    privateExercises:[],
+                                    publicChanged:publicChanged,
+                                    privateChanged:privateChanged,
+                                    publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
+                                    privateExercisesChangeCount:userDetail.privateexerciseschangecount
+                                    // idUser:idUser,
+                                  });
+                                }
+                              }
+                            }
+                          }
+                        });
+                      }
+                    }
+            }else{
+              // Si le user n'a pas de selected exercises
+              console.log('No selected exercises')
+              console.log('lest get last public')
+              const lastpublicchangecount = await pool.query('SELECT "lastPublicChangeCount" FROM global_handler', async (error, lastpublicchangecount) => {
+                if (error) {
+                  console.log(error)
+                  // res.status(400).json({
+                  //   response: {
+                  //     result: 'errorRequest',
+                  //     message: error
+                  //   }
+                  // });
+      
+                }
+                else{
+                  if(lastpublicchangecount.rows !== undefined){
+                    // si nous avons bien un résultat dans le global handler
+                    console.log('result after get last result !!! ')
+                    console.log('result lastpublicchangecount : ', lastpublicchangecount.rows[0].lastPublicChangeCount , 'le send is : ', publicExercisesChangeCount)
+                    if(lastpublicchangecount.rows[0].lastPublicChangeCount > publicExercisesChangeCount){
+                      publicChanged = true;
+                      
+                      
+                      const resSelect = await pool.query('SELECT * FROM public_exercise_handler WHERE status = $1',['public'], async (error, resultsExercisePublic) => {
+                        if (error) {
+                          console.log(error)
+                          // res.status(400).json({
+                          //   response: {
+                          //     result: 'errorRequest',
+                          //     message: error
+                          //   }
+                          // });
+                        }
+                        if(userDetail.privateexerciseschangecount > privateExercisesChangeCount){
+                          privateChanged = true;
+                          pool.query('SELECT * FROM private_exercise_handler WHERE owner = $1',[idUser], async (error, resultsPrivateExercise) => {
+                            if (error) {
+                              console.log(error)
+                              // res.status(400).json({
+                              //   response: {
+                              //     result: 'errorRequest',
+                              //     message: error
+                              //   }
+                              // });
+                            }
+
+                            console.log('RESULT OF Private TRAININGS : ! ',resultsPrivateExercise.rows[0])
+                            return res.status(200).json({
+                              response: {
+                                result:'success',
+                                message:''
+                              },
+                              publicExercises:resultsExercisePublic.rows,
+                              privateExercises:resultsPrivateExercise.rows,
+                              publicChanged:publicChanged,
+                              privateChanged:privateChanged,
+                              publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
+                              privateExercisesChangeCount:userDetail.privateexerciseschangecount
+                              // idUser:idUser,
+                            });
+                          })
+
+                        }
+                        if(userDetail.privateexerciseschangecount < privateExercisesChangeCount){
+                          privateChanged = false;
+                          return res.status(200).json({
+                            response: {
+                              result:'success',
+                              message:''
+                            },
+                            publicExercises:resultsExercisePublic.rows,
+                            privateExercises:[],
+                            publicChanged:publicChanged,
+                            privateChanged:privateChanged,
+                            publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
+                            privateExercisesChangeCount:0
+                            // idUser:idUser,
+                          });
+                        }
+                        if(userDetail.privateexerciseschangecount === privateExercisesChangeCount){
+                          privateChanged = false;
+                          return res.status(200).json({
+                            response: {
+                              result:'success',
+                              message:''
+                            },
+                            publicExercises:resultsExercisePublic.rows,
+                            privateExercises:[],
+                            publicChanged:publicChanged,
+                            privateChanged:privateChanged,
+                            publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
+                            privateExercisesChangeCount:0
+                            // idUser:idUser,
+                          });
+                        }
+                        // console.log('Result du get exo : ! ',results)
+
+                      });
+                    }
+                    if(lastpublicchangecount.rows[0].lastPublicChangeCount < publicExercisesChangeCount){
+                      publicChanged = false;
+
+                      if(userDetail.privateexerciseschangecount > privateExercisesChangeCount){
+                        privateChanged = true;
+                        
+                        pool.query('SELECT * FROM private_exercise_handler WHERE owner = $1',[idUser], async (error, resultsPrivateExercise) => {
+                          if (error) {
+                            console.log(error)
+                            // res.status(400).json({
+                            //   response: {
+                            //     result: 'errorRequest',
+                            //     message: error
+                            //   }
+                            // });
+                          }
+
+                          console.log('RESULT OF Private TRAININGS : ! ',resultsPrivateExercise.rows[0])
+                          return res.status(200).json({
+                            response: {
+                              result:'success',
+                              message:''
+                            },
+                            publicExercises:[],
+                            privateExercises:resultsPrivateExercise.rows,
+                            publicChanged:publicChanged,
+                            privateChanged:privateChanged,
+                            publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
+                            privateExercisesChangeCount:userDetail.privateexerciseschangecount
+                            // idUser:idUser,
+                          });
+                        })
+
+
+                      }
+                      if(userDetail.privateexerciseschangecount < privateExercisesChangeCount){
+                        privateChanged = false;
+                        return res.status(200).json({
+                          response: {
+                            result:'success',
+                            message:''
+                          },
+                          publicExercises:[],
+                          privateExercises:[],
+                          publicChanged:publicChanged,
+                          privateChanged:privateChanged,
+                          publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
+                          privateExercisesChangeCount:0
+                          // idUser:idUser,
+                        });
+                      }
+                      if(userDetail.privateexerciseschangecount === privateExercisesChangeCount){
+                        privateChanged = false;
+
+
+                        return res.status(200).json({
+                          response: {
+                            result:'success',
+                            message:''
+                          },
+                          publicExercises:[],
+                          privateExercises:[],
+                          publicChanged:publicChanged,
+                          privateChanged:privateChanged,
+                          publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
+                          privateExercisesChangeCount:0
+                          // idUser:idUser,
+                        });
+                      }
+                    }
+                    if(lastpublicchangecount.rows[0].lastPublicChangeCount === publicExercisesChangeCount){
+                      publicChanged = false;
+                      if(userDetail.privateexerciseschangecount > privateExercisesChangeCount){
+                        privateChanged = true;
+                        
+                        pool.query('SELECT * FROM private_exercise_handler WHERE owner = $1',[idUser], async (error, resultsPrivateExercise) => {
+                          if (error) {
+                            console.log(error)
+                            // res.status(400).json({
+                            //   response: {
+                            //     result: 'errorRequest',
+                            //     message: error
+                            //   }
+                            // });
+                          }
+
+                          console.log('RESULT OF Private TRAININGS : ! ',resultsPrivateExercise.rows[0])
+                          return res.status(200).json({
+                            response: {
+                              result:'success',
+                              message:''
+                            },
+                            publicExercises:[],
+                            privateExercises:resultsPrivateExercise.rows,
+                            publicChanged:publicChanged,
+                            privateChanged:privateChanged,
+                            publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
+                            privateExercisesChangeCount:userDetail.privateexerciseschangecount
+                            // idUser:idUser,
+                          });
+                        })
+
+
+                      }
+                      if(userDetail.privateexerciseschangecount < privateExercisesChangeCount){
+                        privateChanged = false;
+                        return res.status(200).json({
+                          response: {
+                            result:'success',
+                            message:''
+                          },
+                          publicExercises:[],
+                          privateExercises:[],
+                          publicChanged:publicChanged,
+                          privateChanged:privateChanged,
+                          publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
+                          privateExercisesChangeCount:0
+                          // idUser:idUser,
+                        });
+                      }
+                      if(userDetail.privateexerciseschangecount === privateExercisesChangeCount){
+                        privateChanged = false;
+
+
+                        return res.status(200).json({
+                          response: {
+                            result:'success',
+                            message:''
+                          },
+                          publicExercises:[],
+                          privateExercises:[],
+                          publicChanged:publicChanged,
+                          privateChanged:privateChanged,
+                          publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
+                          privateExercisesChangeCount:0
+                          // idUser:idUser,
+                        });
+                      }
+                    }
+                  }
+                }
+              });
             }
           }
         });
@@ -172,42 +859,7 @@ router.get('/getExercisesList', async function(req, res) {
 
 
         
-        
-        const lastpublicchangecount = await pool.query('SELECT lastpublicchangecount FROM global_handler', async (error, lastpublicchangecount) => {
-          if (error) {
-            console.log(error)
-          }
-          console.log('result lastpublicchangecount : ', lastpublicchangecount.rows[0].lastpublicchangecount , 'le send is : ', publicExercisesChangeCount)
-          if(lastpublicchangecount.rows[0].lastpublicchangecount > publicExercisesChangeCount){
-            publicChanged = true;
-            const resSelect = await pool.query('SELECT * FROM exercise_handler WHERE status = $1',['public'], async (error, resultsExercisePublic) => {
-              if (error) {
-                console.log(error)
-              }
-
-              // console.log('Result du get exo : ! ',results)
-              return res.status(200).json({
-                response: {
-                  result:'success',
-                  message:''
-                },
-                publicExercises:resultsExercisePublic.rows,
-                // privateExercises:privateExercises,
-                publicChanged:publicChanged,
-                // privateChanged:privatechanged,
-                publicExercisesChangeCount:lastpublicchangecount.rows[0].lastpublicchangecount,
-                // privateExercisesChangeCount:0,
-                // idUser:idUser,
-              });
-            });
-          }
-          if(lastpublicchangecount.rows[0].lastpublicchangecount < publicExercisesChangeCount){
-  
-          }
-          if(lastpublicchangecount.rows[0].lastpublicchangecount === publicExercisesChangeCount){
-  
-          }
-        });
+   
         // If the last update is upper than the last storage
         
       }
