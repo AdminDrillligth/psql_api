@@ -232,6 +232,8 @@ router.get('/getAccountDetails', function(req, res) {
   console.log('getToken',req.headers.id)
   userId = "";
   userEmail="";
+  accountUsers = [];
+  accountStaff = [];
   try {
     if(req.headers.token !== undefined){
       token = req.headers.token;
@@ -261,7 +263,7 @@ router.get('/getAccountDetails', function(req, res) {
                 });
               }
               if(results.rowCount === 1){
-                accountUsers = []
+            
                 // results.rows[0].role === 'owner' || 
                 // console.log('RESULTS ADMIN DETAILS : ',results.rows[0].role)
                
@@ -271,42 +273,158 @@ router.get('/getAccountDetails', function(req, res) {
                    if(accountSelected.users.length > 0 && accountSelected.users !== undefined){
                     
                      accountSelected.users.forEach(async user => {
+
                       // console.log('RESP OF FOR EACH : ',user)
                       const selectUser = await pool.query('SELECT * FROM account_handler WHERE id = $1',[user.id], async (error, resultsUser) => {
                         if (error) {
                           console.log(error)
                         }
                         validateUser = false;
-                        console.log('password Hash????? ')
+                        console.log('password Hash????? ', user.id)
 
                         // console.log(resultsUser.rows[0].passwordhash)
                         if(resultsUser.rows !== undefined){
                           if(resultsUser.rows[0] !== undefined){
-                            if(resultsUser.rows[0].passwordhash !== undefined){
-                              console.log('RESULT USERS OF GET DETAILS :  passwordhash??! ', resultsUser.rows[0].passwordhash )
+                            if(resultsUser.rows[0].passwordhash !== undefined && resultsUser.rows[0].passwordhash !== ""){
+                              // console.log('RESULT USERS OF GET DETAILS :  passwordhash??! ', resultsUser.rows[0].passwordhash )
                               validateUser = true;
                             }
                             console.log('RESULT USERS OF GET DETAILS :  ! ', resultsUser.rows[0].id)
                             accountUsers.push({validate:validateUser, id: resultsUser.rows[0].id, email:resultsUser.rows[0].email, fullName:resultsUser.rows[0].fullname,familyName:resultsUser.rows[0].familyname, firstName: resultsUser.rows[0].firstname, role: resultsUser.rows[0].role });
+                            console.log('RESULT OBJECT OF ACCOUNT USERS OF ACCOUNT:  ! ', accountUsers.length, accountSelected.users.length)
                             
-                            delete results.rows[0].passwordhash;
-                            console.log('RESULT OBJECT OF ACCOUNT USERS OF ACCOUNT:  ! ', accountUsers)
                           }
-                          
                         }
-                       
-                      });     
+                        if(accountUsers.length === accountSelected.users.length){
+                          accountSelected.users = accountUsers;
+                          console.log('ACCOUNT USER : ',accountUsers);
+                          if(accountSelected.staff.length > 0 && accountSelected.staff !== undefined){
+                            accountSelected.staff.forEach(async staff => {
+                             // console.log('RESP OF FOR EACH : ',user)
+                             const selectUser = await pool.query('SELECT * FROM account_handler WHERE id = $1',[staff.id], async (error, resultsStaff) => {
+                               if (error) {
+                                 console.log(error)
+                               }
+                               validateStaff = false;
+                               //console.log('password Hash????? ')
+        
+                               // console.log(resultsUser.rows[0].passwordhash)
+                               if(resultsStaff.rows !== undefined){
+                                 if(resultsStaff.rows[0] !== undefined){
+                                   if(resultsStaff.rows[0].passwordhash !== undefined){
+                                     //console.log('RESULT USERS OF GET DETAILS :  passwordhash??! ', resultsUser.rows[0].passwordhash )
+                                     validateStaff = true;
+                                   }
+                                   //console.log('RESULT USERS OF GET DETAILS :  ! ', resultsStaff.rows[0].id)
+                                   accountStaff.push({validate:validateStaff, id: resultsStaff.rows[0].id, email:resultsStaff.rows[0].email, fullName:resultsStaff.rows[0].fullname,familyName:resultsStaff.rows[0].familyname, firstName: resultsStaff.rows[0].firstname, role: resultsStaff.rows[0].role });
+                                   
+        
+                                   //console.log('RESULT OBJECT OF ACCOUNT USERS OF ACCOUNT:  ! ', accountStaff)
+                                 }
+                                 
+                               }
+                               if(accountStaff.length === accountSelected.staff.length){
+                                accountSelected.staff = accountStaff;
+                                console.log('ACCOUNT STAFF : ',accountStaff);
+                                console.log('END OF GET DETAILS');
+                                delete accountSelected.passwordhash;
+                                 res.status(200).json({
+                                  response: {
+                                    result: 'success',
+                                    message: ''
+                                  },
+              
+                                  account:accountSelected
+                                });
+                              }
+                               
+                             });     
+                         
+                           });
+                           
+                           
+                          }else{
+                            delete accountSelected.passwordhash;
+                                 res.status(200).json({
+                                  response: {
+                                    result: 'success',
+                                    message: ''
+                                  },
+              
+                                  account:accountSelected
+                            });
+                          }
+                        }  
+                      });    
+                      
                     });
+                   }else{
+                    // Si le compte n'a pas de users
+                    if(accountSelected.staff.length > 0 && accountSelected.staff !== undefined){
+                    
+                      accountSelected.staff.forEach(async staff => {
+  
+                       // console.log('RESP OF FOR EACH : ',user)
+                       const selectUser = await pool.query('SELECT * FROM account_handler WHERE id = $1',[staff.id], async (error, resultsStaff) => {
+                         if (error) {
+                           console.log(error)
+                         }
+                         validateStaff = false;
+                         //console.log('password Hash????? ')
+  
+                         // console.log(resultsUser.rows[0].passwordhash)
+                         if(resultsStaff.rows !== undefined){
+                           if(resultsStaff.rows[0] !== undefined){
+                             if(resultsStaff.rows[0].passwordhash !== undefined){
+                               //console.log('RESULT USERS OF GET DETAILS :  passwordhash??! ', resultsUser.rows[0].passwordhash )
+                               validateStaff = true;
+                             }
+                             //console.log('RESULT USERS OF GET DETAILS :  ! ', resultsStaff.rows[0].id)
+                             accountStaff.push({validate:validateStaff, id: resultsStaff.rows[0].id, email:resultsStaff.rows[0].email, fullName:resultsStaff.rows[0].fullname,familyName:resultsStaff.rows[0].familyname, firstName: resultsStaff.rows[0].firstname, role: resultsStaff.rows[0].role });
+                             
+  
+                             //console.log('RESULT OBJECT OF ACCOUNT USERS OF ACCOUNT:  ! ', accountStaff)
+                           }
+                           
+                         }
+                         if(accountStaff.length === accountSelected.staff.length){
+                          accountSelected.staff = accountStaff;
+                          console.log('ACCOUNT STAFF : ',accountStaff);
+                          console.log('END OF GET DETAILS');
+                          delete accountSelected.passwordhash;
+                           res.status(200).json({
+                            response: {
+                              result: 'success',
+                              message: ''
+                            },
+        
+                            account:accountSelected
+                          });
+                        }
+                         
+                       });     
                    
+                     });
+                     
+                     
+                    }else{
+                      // Si il n'a pas de users ou de staff
+                          delete accountSelected.passwordhash;
+                           res.status(200).json({
+                            response: {
+                              result: 'success',
+                              message: ''
+                            },
+        
+                            account:accountSelected
+                      });
+                    }
+
                    }
+
+
                    
-                   res.status(200).json({
-                    response: {
-                      result: 'success',
-                      message: ''
-                    },
-                    account:results.rows[0]
-                  });
+
                 }else{
                   // Not owner or admin
                   res.status(200).json({

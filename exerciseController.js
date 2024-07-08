@@ -133,8 +133,8 @@ router.post('/createExercise', function(req, res) {
                     if(resultsprivateexerciseschangecount.rows !== undefined){
                       // if privateexerciseschangecount exist
                       resultsprivateexerciseschangecount.rows[0].privateexerciseschangecount = resultsprivateexerciseschangecount.rows[0].privateexerciseschangecount + 1
-                      const resp = pool.query( "INSERT INTO private_exercise_handler (  header, id, steps, status ) VALUES ($1, $2, $3, $4) RETURNING *",
-                        [ json.header, json.header.id, json.steps, json.header.status]
+                      const resp = pool.query( "INSERT INTO private_exercise_handler (  header, id, steps, status, owner ) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+                        [ json.header, json.header.id, json.steps, json.header.status, json.header.owner.id ]
                       , (error, results) => {if (error) { 
                         console.log(error)
                       }
@@ -155,7 +155,12 @@ router.post('/createExercise', function(req, res) {
           
                             }
                             else{
-                              if(results.rows !== undefined){
+                              if(results !== undefined){
+                                   if(results.rows !== undefined){
+                                // console.log('User modified with ID:',results.rows)
+                                   }else{
+                                    
+                                   }
                                 // console.log('User modified with ID:',results.rows)
                               }
                             }
@@ -686,7 +691,8 @@ router.get('/getExercisesList', async function(req, res) {
                             publicChanged:publicChanged,
                             privateChanged:privateChanged,
                             publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
-                            privateExercisesChangeCount:0
+                            privateExercisesChangeCount:userDetail.privateexerciseschangecount
+
                             // idUser:idUser,
                           });
                         }
@@ -702,7 +708,8 @@ router.get('/getExercisesList', async function(req, res) {
                             publicChanged:publicChanged,
                             privateChanged:privateChanged,
                             publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
-                            privateExercisesChangeCount:0
+                            privateExercisesChangeCount:userDetail.privateexerciseschangecount
+
                             // idUser:idUser,
                           });
                         }
@@ -757,7 +764,8 @@ router.get('/getExercisesList', async function(req, res) {
                           publicChanged:publicChanged,
                           privateChanged:privateChanged,
                           publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
-                          privateExercisesChangeCount:0
+                          privateExercisesChangeCount:userDetail.privateexerciseschangecount
+
                           // idUser:idUser,
                         });
                       }
@@ -775,7 +783,8 @@ router.get('/getExercisesList', async function(req, res) {
                           publicChanged:publicChanged,
                           privateChanged:privateChanged,
                           publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
-                          privateExercisesChangeCount:0
+                          privateExercisesChangeCount:userDetail.privateexerciseschangecount
+
                           // idUser:idUser,
                         });
                       }
@@ -826,7 +835,8 @@ router.get('/getExercisesList', async function(req, res) {
                           publicChanged:publicChanged,
                           privateChanged:privateChanged,
                           publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
-                          privateExercisesChangeCount:0
+                          privateExercisesChangeCount:userDetail.privateexerciseschangecount
+
                           // idUser:idUser,
                         });
                       }
@@ -844,7 +854,8 @@ router.get('/getExercisesList', async function(req, res) {
                           publicChanged:publicChanged,
                           privateChanged:privateChanged,
                           publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
-                          privateExercisesChangeCount:0
+                          privateExercisesChangeCount:userDetail.privateexerciseschangecount
+
                           // idUser:idUser,
                         });
                       }

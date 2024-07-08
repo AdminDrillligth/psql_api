@@ -173,16 +173,70 @@ router.get('/getFirmware', function(req, res) {
         });
        }else {
         // no error token
-        return res.status(200).json({
-          response: {
-            result:'success',
-            message:''
+        console.log('LE ID DU USER POUR LE FIRMWARE: ! ',idUser)
+        const resSelect = await pool.query('SELECT * FROM account_handler WHERE id = $1',[idUser], async (error, results) => {
+          if (error) {
+            console.log(error)
           }
-          // firmwareList:firmwareList
-          // idUser:idUser,
-          // lastPublicFirmwareChangeCount:lastPublicFirmwareChangeCount,
-          // firmwareDetail:firmwareDetail
-        });
+
+          if(results.rowCount === 0){
+            res.status(200).json({
+              response: {
+                result: 'noAccountError',
+                message: 'aucun utilisateur'
+              },
+            });
+          }
+          if(results.rowCount === 1){
+            if(results.rows[0].privatefirmwareid !== null ){
+              // Le private Firmware Id ! 
+              firmwareId = results.rows[0].privatefirmwareid;
+              console.log('RESULTS :we get resp GET FIRMWARE OF : !', results.rows[0].privatefirmwareid)
+              return res.status(200).json({
+                response: {
+                  result:'success',
+                  message:''
+                }
+                // firmwareList:firmwareList
+                // idUser:idUser,
+                // lastPublicFirmwareChangeCount:lastPublicFirmwareChangeCount,
+                // firmwareDetail:firmwareDetail
+              });
+            }else{
+              // on get le global firmware ! 
+              const lastpublicchangecount = await pool.query('SELECT publicfirmwareid FROM global_handler', async (error, publicFirmwareId) => {
+                if (error) {
+                  console.log(error)
+                }
+                console.log('ID DU FIRMWARE GLOBAL: ',publicFirmwareId.rows[0].publicfirmwareid)
+                
+                const resSelectGlobal = await pool.query('SELECT * FROM firmware_handler WHERE id = $1',[publicFirmwareId.rows[0].publicfirmwareid], (error, selectFirmware) => {
+                  if (error) {
+                    console.log(error)
+                  }
+                  if(results.rowCount === 1){
+                    console.log(selectFirmware.rows[0]);
+                    return res.status(200).json({
+                      response: {
+                        result:'success',
+                        message:''
+                      }
+                      // firmwareList:firmwareList
+                      // idUser:idUser,
+                      // lastPublicFirmwareChangeCount:lastPublicFirmwareChangeCount,
+                      // firmwareDetail:firmwareDetail
+                    });
+                  }
+                  
+                })
+                
+                
+              })
+            }
+            
+          }
+        })
+
        }
     })
   }catch(error){
