@@ -415,16 +415,10 @@ router.get('/getAccountDetails', function(req, res) {
                               result: 'success',
                               message: ''
                             },
-        
                             account:accountSelected
                       });
                     }
-
                    }
-
-
-                   
-
                 }else{
                   // Not owner or admin
                   res.status(200).json({
@@ -549,15 +543,6 @@ router.get('/getAccountsList', function(req, res) {
                       if(account.passwordhash !== undefined){
                         validate = true;
                       }
-                      // UsersOfAccount.push({
-                      //   fullName:account.data.fullName,
-                      //   familyName:account.data.familyName,
-                      //   firstName:account.data.firstName,
-                      //   id:account.data.id,
-                      //   email:account.data.email,
-                      //   role:account.data.role,
-                      //   validate: validate
-                      // })
                       console.log('DETAIL OF EACH ACCOUNT : ',account)
                       accountsAdminsOwners.push({validate: validate, id:account.id, email:account.email, role:account.role, fullName:account.fullname, familyName:account.familyname, firstName:account.firstname, licensed: usersAccount})
                     })
@@ -633,63 +618,11 @@ router.post('/updateAccount', async (req, res) => {
                 });
               }
               if(results.rowCount === 1){
-                // console.log('Le body : ! du update ',dataBodyOfRequest)
-                // const res = pool.query('UPDATE account_handler SET users = $1, temp_haute =  WHERE id = $2',
-                // [userDetailOwner.users, dataBodyOfRequest.owner],
-                // (error, results) => {
-                //   if (error) {
-                //     throw error
-                //   }
-                //   console.log('User modified with ID:',results.rows)
-                // })
-             
                 userDetail = results.rows[0];
                 // console.log('the account BEFORE: ! ', userDetail)
                 if(userDetail !== ""){
-                      if(dataBodyOfRequest.email !== undefined){ userDetail.email = dataBodyOfRequest.email }
-                      if(dataBodyOfRequest.passwordHash !== undefined){ userDetail.passwordHash = dataBodyOfRequest.passwordHash }
-                      if(dataBodyOfRequest.firstName !== undefined){ userDetail.firstName = dataBodyOfRequest.firstName }
-                      if(dataBodyOfRequest.familyName !== undefined){ userDetail.familyName = dataBodyOfRequest.familyName }
-                      if(dataBodyOfRequest.fullName !== undefined){ userDetail.fullName = dataBodyOfRequest.firstName + ' '+dataBodyOfRequest.familyName }
-                      if(dataBodyOfRequest.avatarURL !== undefined){ userDetail.avatarURL = dataBodyOfRequest.avatarURL }
-                      if(dataBodyOfRequest.role !== undefined){ userDetail.role = dataBodyOfRequest.role }
-                          if(dataBodyOfRequest.personalInfo !== undefined){
-                              if(dataBodyOfRequest.personalInfo.birthdate !== undefined){ userDetail.personalInfo.birthdate = dataBodyOfRequest.personalInfo.birthdate }
-                              if(dataBodyOfRequest.personalInfo.simpleBirthdate !== undefined){ userDetail.personalInfo.simpleBirthdate = dataBodyOfRequest.personalInfo.simpleBirthdate }
-                              if(dataBodyOfRequest.personalInfo.address1 !== undefined){ userDetail.personalInfo.address1 = dataBodyOfRequest.personalInfo.address1 }
-                              if(dataBodyOfRequest.personalInfo.address2 !== undefined){ userDetail.personalInfo.address2 = dataBodyOfRequest.personalInfo.address2 }
-                              if(dataBodyOfRequest.personalInfo.zip !== undefined){ userDetail.personalInfo.zip = dataBodyOfRequest.personalInfo.zip }
-                              if(dataBodyOfRequest.personalInfo.city !== undefined){ userDetail.personalInfo.city = dataBodyOfRequest.personalInfo.city }
-                              if(dataBodyOfRequest.personalInfo.region !== undefined){ userDetail.personalInfo.region = dataBodyOfRequest.personalInfo.region }
-                              if(dataBodyOfRequest.personalInfo.phone !== undefined){ userDetail.personalInfo.phone = dataBodyOfRequest.personalInfo.phone }
-                              if(dataBodyOfRequest.personalInfo.comment !== undefined){ userDetail.personalInfo.comment = dataBodyOfRequest.personalInfo.comment }
-                          }
-                          if(dataBodyOfRequest.privileges !== undefined){
-                                if(dataBodyOfRequest.privileges.rights !== undefined){ userDetail.privileges.rights = dataBodyOfRequest.privileges.rights }
-                          }
-                      //SET VERIF ON USERS UPDATE BEFORE
-                      if(dataBodyOfRequest.users !== undefined){ userDetail.users = dataBodyOfRequest.users }
-
-
-                      //SET VERIF ON STAFF UPDATE BEFORE
-                      if(dataBodyOfRequest.staff !== undefined){ userDetail.staff = dataBodyOfRequest.staff }
-
-
-                      if(dataBodyOfRequest.econes !== undefined){ userDetail.econes = dataBodyOfRequest.econes }
-
-                      if(dataBodyOfRequest.trainings !== undefined){ userDetail.trainings = dataBodyOfRequest.trainings }
-
-                      if(dataBodyOfRequest.videos !== undefined){ userDetail.videos = dataBodyOfRequest.videos }
-
-                      if(dataBodyOfRequest.licensed !== undefined){ userDetail.licensed = dataBodyOfRequest.licensed }
-
-                      if(dataBodyOfRequest.warning !== undefined){ userDetail.warning = dataBodyOfRequest.warning }
-
-                      if(dataBodyOfRequest.privateOnly !== undefined){ userDetail.privateOnly = dataBodyOfRequest.privateOnly }
-
-                      if(dataBodyOfRequest.privateFirmwareId !== undefined){ userDetail.privateFirmwareId = dataBodyOfRequest.privateFirmwareId }
-                      userDetail.update = DateString;
-                      userDetail.updateIso = isoDateString;
+                      // userDetail.update = DateString;
+                      // userDetail.updateIso = isoDateString;
                 }
                 console.log('USERS DETAILS', dataBodyOfRequest.users)
                 dataBodyOfRequest.users.forEach((user)=>{
@@ -701,11 +634,12 @@ router.post('/updateAccount', async (req, res) => {
                   console.log('USER ID : ',staff.id)
                   delete staff.validate; delete staff.email; delete staff.fullName;delete staff.familyName;delete staff.firstName;delete staff.role;
                 })
-                const resUpdate = pool.query('UPDATE account_handler SET email = $1, firstname = $2, familyname = $3, avartarurl= $4, role =$5, personalinfo = $6, users = $7, staff = $8, econes = $9, trainings = $10, videos = $11, licensed = $12, warning = $13, privateonly = $14, privatefirmwareid = $15, WHERE id = $16',
+                const resUpdate = pool.query('UPDATE account_handler SET email = $1, firstname = $2, familyname = $3, fullname = $4, avartarurl= $5, role =$6, personalinfo = $7, users = $8, staff = $9, econes = $10, trainings = $11, videos = $12, licensed = $13, warning = $14, privateonly = $15, privatefirmwareid = $16 WHERE id = $17',
                 // Order to veritfy integrity of this model ! 
-                  [dataBodyOfRequest.email, 
+                  [ dataBodyOfRequest.email, 
                     dataBodyOfRequest.firstname, 
-                    dataBodyOfRequest.familyname, 
+                    dataBodyOfRequest.familyname,
+                    dataBodyOfRequest.firstname + ' '+dataBodyOfRequest.familyname,
                     dataBodyOfRequest.avartarurl, 
                     dataBodyOfRequest.role,
                     dataBodyOfRequest.personalinfo,
@@ -730,19 +664,8 @@ router.post('/updateAccount', async (req, res) => {
                             result:'success',
                             message:'updatedAccount'
                           },
-                          // dataBodyOfRequest:dataBodyOfRequest,
-                          // account: resultsUpdatedAccount.rows
-                        });
+                      });
                     }
-                    // console.log('the account : ! ', userDetail)
-                    // return res.status(200).json({
-                    //   response: {
-                    //     result:'success',
-                    //     message:'updatedAccount'
-                    //   },
-                    //   // dataBodyOfRequest:dataBodyOfRequest,
-                    //   account: resultsUpdatedAccount.rows
-                    // });
                   })
 
             
