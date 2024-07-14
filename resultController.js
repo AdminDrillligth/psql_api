@@ -119,24 +119,6 @@ router.get('/getResultsList', async function(req, res) {
         resultsOfResults.rows.forEach((result)=>{
           console.log('EACH RESULT : ',result)
           resultsArray.push({idAccount:result.idaccount, idExercice:result.idexercice, idResult:result.idresult, result:result.result})
-          if(resultsArray.length === resultsOfResults.rowCount){
-            // res.status(200).json({
-            //   response: {
-            //      result: 'success',
-            //      message: ''
-            //   },
-            //   rowCount:resultsOfResults.rowCount,
-            //   results:resultsArray
-            // });
-          }else{
-            // res.status(200).json({
-            //   response: {
-            //      result: 'errorParsing',
-            //      message: ''
-            //   },
-            //   rowCount:resultsOfResults.rowCount
-            // });
-          }
         })
         console.log('LE LENGTH ARRAY OF RESULTS : ',resultsArray.length)
         if(resultsArray.length === resultsOfResults.rowCount){

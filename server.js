@@ -11,7 +11,7 @@ var firmwareController = require("./firmwareController");
 
 
 // Use middleware to set the default Content-Type
-app.use(cors({ origin: ['http://localhost:4200','https://drilllight.web.app','http://localhost:8100', 'capacitor://localhost','https://localhost']}));
+app.use(cors({ origin: ['https://devserver.drilllight.com/','http://localhost:4200','http://localhost:8100','https://drilllight.web.app','http://localhost:8100', 'capacitor://localhost','https://localhost']}));
 app.use(express.json());
 app.use(function (req, res, next) {
 //    res.header('Content-Type': 'application/json, charset=utf-8');

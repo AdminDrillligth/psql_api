@@ -3,7 +3,7 @@ var router = express.Router();
 const { pool } = require("./db");
 var jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require('uuid');
-
+var _ = require('lodash');
 
 router.use(function timeLog(req, res, next) {
   console.log('Time: ', Date.now());

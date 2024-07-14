@@ -3,7 +3,7 @@ var router = express.Router();
 const { pool } = require("./db");
 var jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require('uuid');
-
+var _ = require('lodash');
 
 router.use(function timeLog(req, res, next) {
   console.log('Time Account Function : ', new Date().toLocaleDateString('en-GB'));
@@ -269,9 +269,50 @@ router.get('/getAccountDetails', function(req, res) {
                
                 if(results.rows[0].role === 'admin'){
                    accountSelected = results.rows[0];
+                      // let's make a CamelCase Object
+                      console.log('we get details: ', accountSelected)
+                      let account = {
+                        id: id,
+                        owner:accountSelected.owner,
+                        role:accountSelected.role,
+                        email: accountSelected.email,
+                        firstName: accountSelected.firstname,
+                        familyName: accountSelected.familyname,
+                        fullName: accountSelected.fulllname,
+                        avatarURL: accountSelected.avatarurl,
+                        personalInfo: {
+                            // birthdate: accountSelected.personalinfo.birthdate,
+                            // simpleBirthdate: accountSelected.personalinfo.simplebirthdate,
+                            // address1: accountSelected.personalinfo.address1,
+                            // address2: accountSelected.personalinfo.address2,
+                            // zip: accountSelected.personalinfo.zip,
+                            // city: accountSelected.personalinfo.city,
+                            // region: accountSelected.personalinfo.region,
+                            // phone: accountSelected.personalinfo.phone,
+                            // comment: accountSelected.personalinfo.comment
+                        },
+                        privileges: {
+                            rights: accountSelected.privileges.rights
+                        },
+                        users:accountSelected.users,
+                        privateExercisesChangeCount:accountSelected.privateexerciseschangecount,
+                        staff: accountSelected.staff,
+                        econes: accountSelected.econes,
+                        trainings: accountSelected.trainings,
+                        videos: accountSelected.videos,
+                        licensed: accountSelected.licensed,
+                        warning:accountSelected.warning,
+                        date:accountSelected.date,
+                        dateIso:accountSelected.dateiso,
+                        update:accountSelected.update,
+                        privateFirmwareId:accountSelected.privatefirmwareid,
+                        updateIso:accountSelected.updateiso,
+                        privateOnly:accountSelected.privateonly
+
+                      }
                   //  console.log('RESULTS AFTER SELECT ADMIN : ', accountSelected.users, accountSelected.users.length)
-                   if(accountSelected.users.length > 0 && accountSelected.users !== undefined){
-                    
+                   if(accountSelected.users.length > 0 && accountSelected.users !== null && accountSelected.users !== undefined){
+                  
                      accountSelected.users.forEach(async user => {
 
                       // console.log('RESP OF FOR EACH : ',user)
@@ -296,7 +337,7 @@ router.get('/getAccountDetails', function(req, res) {
                           }
                         }
                         if(accountUsers.length === accountSelected.users.length){
-                          accountSelected.users = accountUsers;
+                          account.users = accountUsers;
                           console.log('ACCOUNT USER : ',accountUsers);
                           if(accountSelected.staff.length > 0 && accountSelected.staff !== undefined){
                             accountSelected.staff.forEach(async staff => {
@@ -324,17 +365,17 @@ router.get('/getAccountDetails', function(req, res) {
                                  
                                }
                                if(accountStaff.length === accountSelected.staff.length){
-                                accountSelected.staff = accountStaff;
+                                account.staff = accountStaff;
                                 console.log('ACCOUNT STAFF : ',accountStaff);
                                 console.log('END OF GET DETAILS');
-                                delete accountSelected.passwordhash;
+                                delete account.passwordhash;
                                  res.status(200).json({
                                   response: {
                                     result: 'success',
                                     message: ''
                                   },
               
-                                  account:accountSelected
+                                  account:account
                                 });
                               }
                                
@@ -344,14 +385,14 @@ router.get('/getAccountDetails', function(req, res) {
                            
                            
                           }else{
-                            delete accountSelected.passwordhash;
+                            delete account.passwordhash;
                                  res.status(200).json({
                                   response: {
                                     result: 'success',
                                     message: ''
                                   },
               
-                                  account:accountSelected
+                                  account:account
                             });
                           }
                         }  
@@ -388,17 +429,17 @@ router.get('/getAccountDetails', function(req, res) {
                            
                          }
                          if(accountStaff.length === accountSelected.staff.length){
-                          accountSelected.staff = accountStaff;
+                          account.staff = accountStaff;
                           console.log('ACCOUNT STAFF : ',accountStaff);
                           console.log('END OF GET DETAILS');
-                          delete accountSelected.passwordhash;
+                          delete account.passwordhash;
                            res.status(200).json({
                             response: {
                               result: 'success',
                               message: ''
                             },
         
-                            account:accountSelected
+                            account:account
                           });
                         }
                          
@@ -409,13 +450,13 @@ router.get('/getAccountDetails', function(req, res) {
                      
                     }else{
                       // Si il n'a pas de users ou de staff
-                          delete accountSelected.passwordhash;
+                          delete account.passwordhash;
                            res.status(200).json({
                             response: {
                               result: 'success',
                               message: ''
                             },
-                            account:accountSelected
+                            account:account
                       });
                     }
                    }
@@ -585,6 +626,7 @@ router.post('/updateAccount', async (req, res) => {
   let userDetail  = '';
   console.log('token', token)
   console.log('idUser', idUser)
+  console.log('resetPassword', resetPassword)
   console.log('resetPassword', resetPassword)
    try {
     jwt.verify(token, 'secret', { expiresIn: '30d' }, async function(err, decoded) {
