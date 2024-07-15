@@ -1,3 +1,4 @@
+
 var express = require('express');
 var router = express.Router();
 const { pool } = require("./db");
@@ -24,12 +25,12 @@ router.post('/createAccount',async function(req, res) {
       var DateString = new Date().toLocaleDateString('en-GB');
       var isoDateString = new Date().toISOString();
       let bodyOfRequest = req.body;
-      console.log('req headers Create Account : : ', req.headers.token)
+      // console.log('req headers Create Account : : ', req.headers.token)
       token = req.headers.token
-      console.log('req headers Create Account WITHOUT TEST : : ', token)
+      // console.log('req headers Create Account WITHOUT TEST : : ', token)
       // console.log('createAccount',bodyOfRequest )
       let dataBodyOfRequest = bodyOfRequest.data;
-      // console.log('createAccount',dataBodyOfRequest )
+      console.log('createAccount', dataBodyOfRequest )
       try{
         jwt.verify(token, 'secret', { expiresIn: '30d' }, async function(err, decoded) {
           if(err) {
@@ -47,7 +48,7 @@ router.post('/createAccount',async function(req, res) {
             let firstName = "";
             let familyName = "";
             let fullName = "";
-            let avatarURL = "";
+            let avatarurl = "";
             let birthDate = "";
             let simpleBirthdate = "";
             let address1 = "";
@@ -58,11 +59,11 @@ router.post('/createAccount',async function(req, res) {
             let phone = "";
             let comment = "";
             let rights = [];
-            let users = [];
-            let staff = [];
+            let users = {};
+            let staff = {};
             let econes = [];
-            let trainings = [];
-            let videos = [];
+            let trainings = {};
+            let videos = {};
             let licensed = 10;
             let warning = false;
             let owner = "";
@@ -123,7 +124,7 @@ router.post('/createAccount',async function(req, res) {
                   }
                 }
               });
-            }
+            }      
             if(dataBodyOfRequest.passwordHash !== undefined){ passwordHash = dataBodyOfRequest.passwordHash}
             if(dataBodyOfRequest.privateFirmwareId !== undefined){ privateFirmwareId = dataBodyOfRequest.privateFirmwareId}
             if(dataBodyOfRequest.firstName !== undefined){ firstName = dataBodyOfRequest.firstName}
@@ -131,15 +132,15 @@ router.post('/createAccount',async function(req, res) {
             if(dataBodyOfRequest.fullName !== undefined){ fullName = dataBodyOfRequest.firstName  + ' ' +dataBodyOfRequest.familyName}
             if(dataBodyOfRequest.avatarURL !== undefined){ avatarURL = dataBodyOfRequest.avatarURL}
       
-            if(dataBodyOfRequest.birthdate !== undefined){ birthdate = dataBodyOfRequest.birthDate}
-            if(dataBodyOfRequest.simpleBirthdate !== undefined){ simpleBirthdate = dataBodyOfRequest.simpleBirthdate}
-            if(dataBodyOfRequest.address1 !== undefined){ address1 = dataBodyOfRequest.address1}
-            if(dataBodyOfRequest.address2 !== undefined){ address2 = dataBodyOfRequest.address2}
-            if(dataBodyOfRequest.zip !== undefined){ zip = dataBodyOfRequest.zip}
-            if(dataBodyOfRequest.city !== undefined){ city = dataBodyOfRequest.city}
-            if(dataBodyOfRequest.region !== undefined){ region = dataBodyOfRequest.region}
-            if(dataBodyOfRequest.phone !== undefined){ phone = dataBodyOfRequest.phone}
-            if(dataBodyOfRequest.comment !== undefined){ comment = dataBodyOfRequest.comment}
+            if(dataBodyOfRequest.personalInfo.birthdate !== undefined){ birthdate = dataBodyOfRequest.personalInfo.birthDate}
+            if(dataBodyOfRequest.personalInfo.simpleBirthdate !== undefined){ simpleBirthdate = dataBodyOfRequest.personalInfo.simpleBirthdate}
+            if(dataBodyOfRequest.personalInfo.address1 !== undefined){ address1 = dataBodyOfRequest.personalInfo.address1}
+            if(dataBodyOfRequest.personalInfo.address2 !== undefined){ address2 = dataBodyOfRequest.personalInfo.address2}
+            if(dataBodyOfRequest.personalInfo.zip !== undefined){ zip = dataBodyOfRequest.personalInfo.zip}
+            if(dataBodyOfRequest.personalInfo.city !== undefined){ city = dataBodyOfRequest.personalInfo.city}
+            if(dataBodyOfRequest.personalInfo.region !== undefined){ region = dataBodyOfRequest.personalInfo.region}
+            if(dataBodyOfRequest.personalInfo.phone !== undefined){ phone = dataBodyOfRequest.personalInfo.phone}
+            if(dataBodyOfRequest.personalInfo.comment !== undefined){ comment = dataBodyOfRequest.personalInfo.comment}
       
             if(dataBodyOfRequest.rights !== undefined){ rights = dataBodyOfRequest.rights}
             if(dataBodyOfRequest.users !== undefined){ users = dataBodyOfRequest.users}
@@ -153,20 +154,20 @@ router.post('/createAccount',async function(req, res) {
             if(dataBodyOfRequest.owner !== undefined){ owner = dataBodyOfRequest.owner}
             if(dataBodyOfRequest.role !== undefined){ role = dataBodyOfRequest.role}
             if(dataBodyOfRequest.privateOnly !== undefined){ privateOnly = dataBodyOfRequest.privateOnly}
-      
             if(dataBodyOfRequest.email){
+
               email = dataBodyOfRequest.email;
               const userObject = {
                 id: id,
-                owner:owner,
-                role:role,
+                owner: owner,
+                role: role,
                 email: email,
-                passwordHash:"",
-                firstName: firstName,
-                familyName: familyName,
-                fullName: fullName,
-                avatarURL: avatarURL,
-                personalInfo: {
+                passwordhash: "",
+                firstname: firstName,
+                familyname: familyName,
+                fullname: fullName,
+                avatarurl: avatarurl,
+                personalinfo: {
                     birthdate: birthDate,
                     simpleBirthdate: simpleBirthdate,
                     address1: address1,
@@ -181,7 +182,7 @@ router.post('/createAccount',async function(req, res) {
                     rights: rights
                 },
                 users:users,
-                privateExercisesChangeCount:0,
+                privateexerciseschangecount:0,
                 staff: staff,
                 econes: econes,
                 trainings: trainings,
@@ -189,35 +190,30 @@ router.post('/createAccount',async function(req, res) {
                 licensed: licensed,
                 warning:warning,
                 date:DateString,
-                dateIso:isoDateString,
+                dateiso:isoDateString,
                 update:DateString,
-                privateFirmwareId:privateFirmwareId,
-                updateIso:isoDateString,
-                privateOnly:privateOnly
+                privatefirmwareid:privateFirmwareId,
+                updateiso:isoDateString,
+                privateonly:privateOnly
             }
-            console.log(`User added with ID: `, userObject);
-              const resp = pool.query( "INSERT INTO account_handler ( id, role, owner, email, passwordhash, firstname, familyname, fullname , personalinfo, privileges, users, staff, econes, trainings, videos, licensed, warning, date, dateiso, update, updateiso, privateonly ) VALUES ($1, $2,$3, $4,$5, $6,$7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22) RETURNING *",
-                [userObject.id,  userObject.role, userObject.owner, userObject.email, userObject.passwordHash, userObject.firstName, userObject.familyName, userObject.fullName , userObject.personalInfo, userObject.privileges, userObject.users, userObject.staff, userObject.econes, userObject.trainings, userObject.videos, userObject.licensed, userObject.warning, userObject.date, userObject.dateIso, userObject.update, userObject.updateIso, userObject.privateOnly ]
+            console.log(`User added with ID: `, userObject );
+              const resp = pool.query( "INSERT INTO account_handler ( id, role, owner, email, passwordhash, firstname, familyname, fullname , personalinfo, privileges, users, staff, econes, trainings, videos, licensed, warning, date, dateiso, update, updateiso, privateonly, avatarurl ) VALUES ($1, $2,$3, $4,$5, $6,$7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23) RETURNING *",
+                [userObject.id,  userObject.role, userObject.owner, userObject.email, userObject.passwordhash, userObject.firstname, userObject.familyname, userObject.fullname , userObject.personalinfo, userObject.privileges, userObject.users, userObject.staff, userObject.econes, userObject.trainings, userObject.videos, userObject.licensed, userObject.warning, userObject.date, userObject.dateiso, userObject.update, userObject.updateiso, userObject.privateonly, userObject.avatarurl ]
               , (error, results) => {if (error) { throw error }
               if(results){
-                
                 // console.log(`User added with ID: ${results.rows[0].id}`);
-                res.status(200).json({
-                  response: {
-                    result: 'success',
-                    message: ''
-                  },
-                  account: userObject
-                });
-              }
+                  res.status(200).json({
+                    response: {
+                      result: 'success',
+                      message: ''
+                    },
+                    account: userObject
+                  });
+                }
                
                 // console.log(userObject);
-             
               });
-           
-
             }
-            
            }
         })
 
@@ -267,7 +263,7 @@ router.get('/getAccountDetails', function(req, res) {
                 // results.rows[0].role === 'owner' || 
                 // console.log('RESULTS ADMIN DETAILS : ',results.rows[0].role)
                
-                if(results.rows[0].role === 'admin'){
+                if(results.rows[0].role === 'admin' || results.rows[0].role === 'owner' ){
                    accountSelected = results.rows[0];
                       // let's make a CamelCase Object
                       console.log('we get details: ', accountSelected)
@@ -278,8 +274,8 @@ router.get('/getAccountDetails', function(req, res) {
                         email: accountSelected.email,
                         firstName: accountSelected.firstname,
                         familyName: accountSelected.familyname,
-                        fullName: accountSelected.fulllname,
-                        avatarURL: accountSelected.avatarurl,
+                        fullName: accountSelected.fullname,
+                        avatarurl: accountSelected.avatarurl,
                         personalInfo: {
                             // birthdate: accountSelected.personalinfo.birthdate,
                             // simpleBirthdate: accountSelected.personalinfo.simplebirthdate,
@@ -290,6 +286,15 @@ router.get('/getAccountDetails', function(req, res) {
                             // region: accountSelected.personalinfo.region,
                             // phone: accountSelected.personalinfo.phone,
                             // comment: accountSelected.personalinfo.comment
+                            birthdate: "",
+                            simpleBirthdate: "",
+                            address1: "",
+                            address2: "",
+                            zip: "",
+                            city: "",
+                            region: "",
+                            phone: "",
+                            comment: ""
                         },
                         privileges: {
                             rights: accountSelected.privileges.rights
@@ -311,10 +316,8 @@ router.get('/getAccountDetails', function(req, res) {
 
                       }
                   //  console.log('RESULTS AFTER SELECT ADMIN : ', accountSelected.users, accountSelected.users.length)
-                   if(accountSelected.users.length > 0 && accountSelected.users !== null && accountSelected.users !== undefined){
-                  
-                     accountSelected.users.forEach(async user => {
-
+                  if(accountSelected.users!== null && accountSelected.users.length > 0 && accountSelected.users !== undefined){
+                      accountSelected.users.forEach(async user => {
                       // console.log('RESP OF FOR EACH : ',user)
                       const selectUser = await pool.query('SELECT * FROM account_handler WHERE id = $1',[user.id], async (error, resultsUser) => {
                         if (error) {
@@ -322,7 +325,6 @@ router.get('/getAccountDetails', function(req, res) {
                         }
                         validateUser = false;
                         console.log('password Hash????? ', user.id)
-
                         // console.log(resultsUser.rows[0].passwordhash)
                         if(resultsUser.rows !== undefined){
                           if(resultsUser.rows[0] !== undefined){
@@ -338,8 +340,10 @@ router.get('/getAccountDetails', function(req, res) {
                         }
                         if(accountUsers.length === accountSelected.users.length){
                           account.users = accountUsers;
+                          account.users = _.orderBy(account.users, ['fullName'],['desc'])
                           console.log('ACCOUNT USER : ',accountUsers);
-                          if(accountSelected.staff.length > 0 && accountSelected.staff !== undefined){
+                          // 
+                          if(accountSelected.staff !== null && accountSelected.staff.length > 0 && accountSelected.staff !== undefined){
                             accountSelected.staff.forEach(async staff => {
                              // console.log('RESP OF FOR EACH : ',user)
                              const selectUser = await pool.query('SELECT * FROM account_handler WHERE id = $1',[staff.id], async (error, resultsStaff) => {
@@ -366,6 +370,7 @@ router.get('/getAccountDetails', function(req, res) {
                                }
                                if(accountStaff.length === accountSelected.staff.length){
                                 account.staff = accountStaff;
+                                account.staff = _.orderBy(account.staff, ['fullName'],['asc'])
                                 console.log('ACCOUNT STAFF : ',accountStaff);
                                 console.log('END OF GET DETAILS');
                                 delete account.passwordhash;
@@ -399,12 +404,11 @@ router.get('/getAccountDetails', function(req, res) {
                       });    
                       
                     });
-                   }else{
+                  }else{
                     // Si le compte n'a pas de users
-                    if(accountSelected.staff.length > 0 && accountSelected.staff !== undefined){
+                    if(accountSelected.staff !== null && accountSelected.staff.length > 0 && accountSelected.staff !== undefined){
                     
                       accountSelected.staff.forEach(async staff => {
-  
                        // console.log('RESP OF FOR EACH : ',user)
                        const selectUser = await pool.query('SELECT * FROM account_handler WHERE id = $1',[staff.id], async (error, resultsStaff) => {
                          if (error) {
@@ -422,14 +426,13 @@ router.get('/getAccountDetails', function(req, res) {
                              }
                              //console.log('RESULT USERS OF GET DETAILS :  ! ', resultsStaff.rows[0].id)
                              accountStaff.push({validate:validateStaff, id: resultsStaff.rows[0].id, email:resultsStaff.rows[0].email, fullName:resultsStaff.rows[0].fullname,familyName:resultsStaff.rows[0].familyname, firstName: resultsStaff.rows[0].firstname, role: resultsStaff.rows[0].role });
-                             
-  
                              //console.log('RESULT OBJECT OF ACCOUNT USERS OF ACCOUNT:  ! ', accountStaff)
-                           }
+                      }
                            
-                         }
-                         if(accountStaff.length === accountSelected.staff.length){
+                    }
+                    if(accountStaff.length === accountSelected.staff.length){
                           account.staff = accountStaff;
+                          account.staff = _.orderBy(account.staff, ['fullName'],['asc'])
                           console.log('ACCOUNT STAFF : ',accountStaff);
                           console.log('END OF GET DETAILS');
                           delete account.passwordhash;
@@ -441,14 +444,14 @@ router.get('/getAccountDetails', function(req, res) {
         
                             account:account
                           });
-                        }
-                         
-                       });     
+                      }   
+                    });     
                    
-                     });
+                    });
                      
                      
-                    }else{
+                    }
+                    else{
                       // Si il n'a pas de users ou de staff
                           delete account.passwordhash;
                            res.status(200).json({
@@ -581,11 +584,12 @@ router.get('/getAccountsList', function(req, res) {
                       // console.log('LENGTH USERS :  ! ',account.id, usersAccount)
                       let validate = false;
                       console.log('details account',account)
-                      if(account.passwordhash !== undefined){
+                      if(account.passwordhash !== undefined && account.passwordhash !== ""){
                         validate = true;
                       }
                       console.log('DETAIL OF EACH ACCOUNT : ',account)
                       accountsAdminsOwners.push({validate: validate, id:account.id, email:account.email, role:account.role, fullName:account.fullname, familyName:account.familyname, firstName:account.firstname, licensed: usersAccount})
+                      accountsAdminsOwners = _.orderBy(accountsAdminsOwners, ['fullName'],['asc'])
                     })
                     // console.log(results)
                     res.status(200).json({
@@ -624,10 +628,11 @@ router.post('/updateAccount', async (req, res) => {
   let token = headers.token;
   let idUser = dataBodyOfRequest.id;
   let userDetail  = '';
-  console.log('token', token)
-  console.log('idUser', idUser)
-  console.log('resetPassword', resetPassword)
-  console.log('resetPassword', resetPassword)
+  // console.log('token', token)
+  // console.log('idUser', idUser)
+  // console.log('resetPassword', resetPassword)
+  // console.log('resetPassword', resetPassword)
+  console.log("bodyOfRequest : :", dataBodyOfRequest.privateOnly)
    try {
     jwt.verify(token, 'secret', { expiresIn: '30d' }, async function(err, decoded) {
       if(err) {
@@ -660,6 +665,7 @@ router.post('/updateAccount', async (req, res) => {
                 });
               }
               if(results.rowCount === 1){
+                console.log("bodyOfRequest 2: :", dataBodyOfRequest.privateOnly)
                 userDetail = results.rows[0];
                 // console.log('the account BEFORE: ! ', userDetail)
                 if(userDetail !== ""){
@@ -676,15 +682,16 @@ router.post('/updateAccount', async (req, res) => {
                   console.log('USER ID : ',staff.id)
                   delete staff.validate; delete staff.email; delete staff.fullName;delete staff.familyName;delete staff.firstName;delete staff.role;
                 })
-                const resUpdate = pool.query('UPDATE account_handler SET email = $1, firstname = $2, familyname = $3, fullname = $4, avartarurl= $5, role =$6, personalinfo = $7, users = $8, staff = $9, econes = $10, trainings = $11, videos = $12, licensed = $13, warning = $14, privateonly = $15, privatefirmwareid = $16 WHERE id = $17',
+                const resUpdate = pool.query('UPDATE account_handler SET email = $1, firstname = $2, familyname = $3, fullname = $4, avatarurl= $5, role =$6, personalinfo = $7, users = $8, staff = $9, econes = $10, trainings = $11, videos = $12, licensed = $13, warning = $14, privateonly = $15, privatefirmwareid = $16 WHERE id = $17',
                 // Order to veritfy integrity of this model ! 
-                  [ dataBodyOfRequest.email, 
-                    dataBodyOfRequest.firstname, 
-                    dataBodyOfRequest.familyname,
-                    dataBodyOfRequest.firstname + ' '+dataBodyOfRequest.familyname,
-                    dataBodyOfRequest.avartarurl, 
+                  [ 
+                    dataBodyOfRequest.email,
+                    dataBodyOfRequest.firstName, 
+                    dataBodyOfRequest.familyName,
+                    dataBodyOfRequest.firstName + ' ' + dataBodyOfRequest.familyName,
+                    dataBodyOfRequest.avatarurl, 
                     dataBodyOfRequest.role,
-                    dataBodyOfRequest.personalinfo,
+                    dataBodyOfRequest.personalInfo,
                     dataBodyOfRequest.users,
                     dataBodyOfRequest.staff,
                     dataBodyOfRequest.econes,
@@ -692,9 +699,10 @@ router.post('/updateAccount', async (req, res) => {
                     dataBodyOfRequest.videos,
                     dataBodyOfRequest.licensed,
                     dataBodyOfRequest.warning,
-                    dataBodyOfRequest.privateonly,
-                    dataBodyOfRequest.privatefirmwareid,
-                    idUser],
+                    dataBodyOfRequest.privateOnly,
+                    dataBodyOfRequest.privateFirmwareId,
+                    idUser
+                  ],
                   (error, resultsUpdatedAccount) => {
                     if (error) {
                       throw error
@@ -706,14 +714,12 @@ router.post('/updateAccount', async (req, res) => {
                             result:'success',
                             message:'updatedAccount'
                           },
+                          account:dataBodyOfRequest
                       });
                     }
                   })
-
-            
               }
             });
-           
           }   
       }
     });

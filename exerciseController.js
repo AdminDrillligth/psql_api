@@ -319,7 +319,7 @@ router.get('/getExercisesList', async function(req, res) {
             console.log("privateexerciseschangecount :: ! ", userDetail.privateexerciseschangecount )
             if(userDetail.trainings !== undefined ){
                       if(userDetail.trainings.length > 0  && webapp !== '1'){
-                    //     // If user have a selected exercises
+                          //     // If user have a selected exercises
                           console.log('TRAININGS LENGTH: ! ',userDetail.trainings.length)
                           userDetail.trainings.forEach(training => {
                           countOfSelectedTrainingsInside ++;
@@ -332,14 +332,9 @@ router.get('/getExercisesList', async function(req, res) {
                               countOfSelectedTrainings ++
                               console.log('RESULT OF USER SELECTED TRAININGS PUBLIC : ! ',resultsExercise.rows)
                               publicExercises.push(resultsExercise.rows[0])
-                              if(countOfSelectedTrainings === userDetail.trainings.length){
-                                
-                                
+                              if(countOfSelectedTrainings === userDetail.trainings.length){  
                                 // publicExercises = _.orderBy(publicExercises, ['?'],['desc'])
                                 // privateExercises = _.orderBy(privateExercises, ['?'],['desc'])
-
-
-
                                 console.log('COUNT SELECTED PUBLIC END: ! ',countOfSelectedTrainings)
                                 console.log('TRAININGS LENGTH: END! ',countOfSelectedTrainingsInside)
                                 console.log('RESULT LENGTH : ', privateExercises.length, publicExercises.length)
@@ -372,7 +367,6 @@ router.get('/getExercisesList', async function(req, res) {
                                 console.log('COUNT SELECTED PRIVATE END: ! ',countOfSelectedTrainings)
                                 console.log('TRAININGS LENGTH: END! ',countOfSelectedTrainingsInside)
                                 console.log('RESULT LENGTH : ', privateExercises.length, publicExercises.length)
-
                                 // publicExercises = _.orderBy(publicExercises, ['?'],['desc'])
                                 // privateExercises = _.orderBy(privateExercises, ['?'],['desc'])
                                 return res.status(200).json({
@@ -390,23 +384,14 @@ router.get('/getExercisesList', async function(req, res) {
                                 });
                               }
                             }
-                            
-                          })  
-                       
-
+                          }) 
                        }) 
-
                     }
                     else {
-                      
-
-                      
                       // Si le tableau user est vide
-                    
                       if(webapp === '1'){
                         // !!
                         console.log('WE ARE IN WEB APP !!! ');
-
                         if(userDetail.privateonly){
                           // Si le user est en exos privé uniquement
 
@@ -424,13 +409,16 @@ router.get('/getExercisesList', async function(req, res) {
                                 // });
                               }
                               console.log('RESULT OF Private TRAININGS : ! ',resultsPrivateExercise.rows[0])
+
                               return res.status(200).json({
                                 response: {
                                   result:'success',
                                   message:''
                                 },
+                                publicExercises:[],
+                                privateExercises:resultsPrivateExercise.rows,
                                 publicChanged:false,
-                                privateChanged:privateChanged,
+                                privateChanged:true,
                               });
                             })
                           }
