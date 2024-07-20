@@ -340,7 +340,7 @@ router.get('/getAccountDetails', function(req, res) {
                         }
                         if(accountUsers.length === accountSelected.users.length){
                           account.users = accountUsers;
-                          account.users = _.orderBy(account.users, ['fullName'],['desc'])
+                          account.users = _.orderBy(account.users, ['fullName'],['asc'])
                           console.log('ACCOUNT USER : ',accountUsers);
                           // 
                           if(accountSelected.staff !== null && accountSelected.staff.length > 0 && accountSelected.staff !== undefined){
@@ -431,6 +431,7 @@ router.get('/getAccountDetails', function(req, res) {
                            
                     }
                     if(accountStaff.length === accountSelected.staff.length){
+                          
                           account.staff = accountStaff;
                           account.staff = _.orderBy(account.staff, ['fullName'],['asc'])
                           console.log('ACCOUNT STAFF : ',accountStaff);
@@ -588,6 +589,7 @@ router.get('/getAccountsList', function(req, res) {
                         validate = true;
                       }
                       console.log('DETAIL OF EACH ACCOUNT : ',account)
+                      
                       accountsAdminsOwners.push({validate: validate, id:account.id, email:account.email, role:account.role, fullName:account.fullname, familyName:account.familyname, firstName:account.firstname, licensed: usersAccount})
                       accountsAdminsOwners = _.orderBy(accountsAdminsOwners, ['fullName'],['asc'])
                     })

@@ -61,6 +61,7 @@ router.post('/createExercise', function(req, res) {
             ////
 
             if(json.header.status === 'public'){
+              console.log('on est en mode public : ')
               const resSelect = await pool.query('SELECT "lastPublicChangeCount" FROM global_handler', async (error, results) => {
                 if (error) {
                   console.log(error)
@@ -102,7 +103,7 @@ router.post('/createExercise', function(req, res) {
                 console.log(error)
                }
                if(results.rows !== undefined){
-                console.log(`Exercise added with ID: ${results.rows}`);
+                console.log(`Exercise added with ID: ${results.rows[0]}`);
                 res.status(200).json({
                   response: {
                     result: 'success',
@@ -228,7 +229,6 @@ router.post('/createExercise', function(req, res) {
                 //   }
                 //   console.log('User modified with ID:',results.rows)
                 // })
-                
               }else{
                 res.status(200).json({
                   response: {
@@ -237,16 +237,16 @@ router.post('/createExercise', function(req, res) {
                   }
                 });
               }
-
-            }else{
-              res.status(200).json({
-                response: {
-                  result: 'errorBadStatus',
-                  message: "Le status de l\'exercice n'est pas public ou privé"
-                },
-                json:json
-              });
             }
+            // else{
+            //   res.status(200).json({
+            //     response: {
+            //       result: 'errorBadStatus',
+            //       message: "Le status de l\'exercice n'est pas public ou privé"
+            //     },
+            //     json:json
+            //   });
+            // }
             
            }
     })
@@ -318,7 +318,55 @@ router.get('/getExercisesList', async function(req, res) {
             console.log('List of selected trainings :',userDetail.trainings)
             console.log("privateexerciseschangecount :: ! ", userDetail.privateexerciseschangecount )
             if(userDetail.trainings !== undefined ){
+              const lastpublicchangecount = await pool.query('SELECT "lastPublicChangeCount" FROM global_handler', async (error, lastpublicchangecount) => {
+                if (error) {
+                  console.log(error)
+                  // res.status(400).json({
+                  //   response: {
+                  //     result: 'errorRequest',
+                  //     message: error
+                  //   }
+                  // });
+      
+                }
+                else{
+                  if(lastpublicchangecount.rows !== undefined){
+                    console.log('le last public change count: Before get infos inside APP', lastpublicchangecount.rows)
+                  }
+                }
+              })
                       if(userDetail.trainings.length > 0  && webapp !== '1'){
+                        if(userDetail.privateonly){
+                          userDetail.trainings.forEach(training => {
+                            pool.query('SELECT * FROM private_exercise_handler WHERE id = $1',[training], async (error, resultsExercise) => {
+                              if (error) {
+                                console.log(error)
+                              }
+                              if(resultsExercise.rowCount > 0){
+                                // countOfSelectedTrainings ++
+                                privateExercises.push(resultsExercise.rows[0])
+                                console.log('RESULT OF USER SELECTED TRAININGS PRIVATE : ! ',resultsExercise.rows)
+                                  console.log('COUNT SELECTED PRIVATE END: ! ',countOfSelectedTrainings)
+                                  console.log('TRAININGS LENGTH: END! ',countOfSelectedTrainingsInside)
+                                  console.log('RESULT LENGTH : ', privateExercises.length, publicExercises.length)
+                                  privateExercises = _.orderBy(privateExercises, ['header.title'],['asc'])
+                                  return res.status(200).json({
+                                    response: {
+                                      result:'success',
+                                      message:''
+                                    },
+                                    publicExercises:[],
+                                    privateExercises:privateExercises,
+                                    publicChanged:false,
+                                    privateChanged:true,
+                                    publicExercisesChangeCount:1, //  lastpublicchangecount.rows[0].lastPublicChangeCount
+                                    privateExercisesChangeCount:1, //userDetail.privateexerciseschangecount
+                                    idUser:idUser,
+                                  });
+                              }
+                            }) 
+                          })
+                        }else{
                           //     // If user have a selected exercises
                           console.log('TRAININGS LENGTH: ! ',userDetail.trainings.length)
                           userDetail.trainings.forEach(training => {
@@ -333,11 +381,11 @@ router.get('/getExercisesList', async function(req, res) {
                               console.log('RESULT OF USER SELECTED TRAININGS PUBLIC : ! ',resultsExercise.rows)
                               publicExercises.push(resultsExercise.rows[0])
                               if(countOfSelectedTrainings === userDetail.trainings.length){  
-                                // publicExercises = _.orderBy(publicExercises, ['?'],['desc'])
-                                // privateExercises = _.orderBy(privateExercises, ['?'],['desc'])
                                 console.log('COUNT SELECTED PUBLIC END: ! ',countOfSelectedTrainings)
                                 console.log('TRAININGS LENGTH: END! ',countOfSelectedTrainingsInside)
                                 console.log('RESULT LENGTH : ', privateExercises.length, publicExercises.length)
+                                publicExercises = _.orderBy(publicExercises, ['header.title'],['asc'])
+                                privateExercises = _.orderBy(privateExercises, ['header.title'],['asc'])
                                 return res.status(200).json({
                                   response: {
                                     result:'success',
@@ -367,8 +415,8 @@ router.get('/getExercisesList', async function(req, res) {
                                 console.log('COUNT SELECTED PRIVATE END: ! ',countOfSelectedTrainings)
                                 console.log('TRAININGS LENGTH: END! ',countOfSelectedTrainingsInside)
                                 console.log('RESULT LENGTH : ', privateExercises.length, publicExercises.length)
-                                // publicExercises = _.orderBy(publicExercises, ['?'],['desc'])
-                                // privateExercises = _.orderBy(privateExercises, ['?'],['desc'])
+                                publicExercises = _.orderBy(publicExercises, ['header.title'],['asc'])
+                                privateExercises = _.orderBy(privateExercises, ['header.title'],['asc'])
                                 return res.status(200).json({
                                   response: {
                                     result:'success',
@@ -385,7 +433,9 @@ router.get('/getExercisesList', async function(req, res) {
                               }
                             }
                           }) 
-                       }) 
+                          }) 
+                        }
+                         
                     }
                     else {
                       // Si le tableau user est vide
@@ -410,13 +460,15 @@ router.get('/getExercisesList', async function(req, res) {
                               }
                               console.log('RESULT OF Private TRAININGS : ! ',resultsPrivateExercise.rows[0])
 
+                              let arrayOfPrivateExercises =  resultsExercisePublic.rows
+                              arrayOfPrivateExercises = _.orderBy(arrayOfPrivateExercises, ['header.title'],['asc'])
                               return res.status(200).json({
                                 response: {
                                   result:'success',
                                   message:''
                                 },
                                 publicExercises:[],
-                                privateExercises:resultsPrivateExercise.rows,
+                                privateExercises:arrayOfPrivateExercises,
                                 publicChanged:false,
                                 privateChanged:true,
                               });
@@ -429,6 +481,8 @@ router.get('/getExercisesList', async function(req, res) {
                                 result:'success',
                                 message:''
                               },
+                              publicExercises:[],
+                              privateExercises:[],
                               publicChanged:false,
                               privateChanged:privateChanged,
                             });
@@ -440,6 +494,8 @@ router.get('/getExercisesList', async function(req, res) {
                                 result:'success',
                                 message:''
                               },
+                              publicExercises:[],
+                              privateExercises:[],
                               publicChanged:false,
                               privateChanged:privateChanged,
                             });
@@ -491,15 +547,17 @@ router.get('/getExercisesList', async function(req, res) {
                                           // });
                                         }
                                         console.log('RESULT OF Private TRAININGS : ! ', resultsPrivateExercise.rows[0]);
-                                        // publicExercises = _.orderBy(publicExercises, ['?'],['desc'])
-                                        // privateExercises = _.orderBy(privateExercises, ['?'],['desc'])
+                                        let arrayOfPublicExercises =  resultsExercisePublic.rows
+                                        arrayOfPublicExercises = _.orderBy(arrayOfPublicExercises, ['header.title'],['asc'])
+                                        let arrayOfPrivateExercises =  resultsPrivateExercise.rows
+                                        arrayOfPrivateExercises = _.orderBy(arrayOfPrivateExercises, ['header.title'],['asc'])
                                         return res.status(200).json({
                                           response: {
                                             result:'success',
                                             message:''
                                           },
-                                          publicExercises:resultsExercisePublic.rows,
-                                          privateExercises:resultsPrivateExercise.rows,
+                                          publicExercises:arrayOfPublicExercises,
+                                          privateExercises:arrayOfPrivateExercises,
                                           publicChanged:publicChanged,
                                           privateChanged:privateChanged,
                                           publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
@@ -510,7 +568,8 @@ router.get('/getExercisesList', async function(req, res) {
                                       })
                                     }
                                     if(userDetail.privateexerciseschangecount < privateExercisesChangeCount){
-                                        // publicExercises = _.orderBy(publicExercises, ['?'],['desc'])
+                                      let arrayOfPublicExercises =  resultsExercisePublic.rows
+                                      arrayOfPublicExercises = _.orderBy(arrayOfPublicExercises, ['header.title'],['asc'])
 
                                       privateChanged = false;
                                       return res.status(200).json({
@@ -518,7 +577,7 @@ router.get('/getExercisesList', async function(req, res) {
                                           result:'success',
                                           message:''
                                         },
-                                        publicExercises:resultsExercisePublic.rows,
+                                        publicExercises:arrayOfPublicExercises,
                                         privateExercises:[],
                                         publicChanged:publicChanged,
                                         privateChanged:privateChanged,
@@ -528,15 +587,16 @@ router.get('/getExercisesList', async function(req, res) {
                                       });
                                     }
                                     if(userDetail.privateexerciseschangecount === privateExercisesChangeCount){
-                                      // publicExercises = _.orderBy(publicExercises, ['?'],['desc'])
-   
+                                      let arrayOfPublicExercises =  resultsExercisePublic.rows
+                                      arrayOfPublicExercises = _.orderBy(arrayOfPublicExercises, ['header.title'],['asc'])
+
                                       privateChanged = false;
                                       return res.status(200).json({
                                         response: {
                                           result:'success',
                                           message:''
                                         },
-                                        publicExercises:resultsExercisePublic.rows,
+                                        publicExercises:arrayOfPublicExercises,
                                         privateExercises:[],
                                         publicChanged:publicChanged,
                                         privateChanged:privateChanged,
@@ -564,14 +624,16 @@ router.get('/getExercisesList', async function(req, res) {
   
                                       console.log('RESULT OF Private TRAININGS : ! ',resultsPrivateExercise.rows[0])
 
-                                      // privateExercises = _.orderBy(privateExercises, ['?'],['desc'])
+
+                                      let arrayOfPrivateExercises =  resultsPrivateExercise.rows
+                                      arrayOfPrivateExercises = _.orderBy(arrayOfPrivateExercises, ['header.title'],['asc'])
                                       return res.status(200).json({
                                         response: {
                                           result:'success',
                                           message:''
                                         },
                                         publicExercises:[],
-                                        privateExercises:resultsPrivateExercise.rows,
+                                        privateExercises:arrayOfPrivateExercises,
                                         publicChanged:publicChanged,
                                         privateChanged:privateChanged,
                                         publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
@@ -631,13 +693,16 @@ router.get('/getExercisesList', async function(req, res) {
                                       }
                                         // privateExercises = _.orderBy(privateExercises, ['?'],['desc'])
                                       console.log('RESULT OF Private TRAININGS : ! ',resultsPrivateExercise.rows[0])
+
+                                        let arrayOfPrivateExercises =  resultsPrivateExercise.rows
+                                        arrayOfPrivateExercises = _.orderBy(arrayOfPrivateExercises, ['header.title'],['asc'])
                                       return res.status(200).json({
                                         response: {
                                           result:'success',
                                           message:''
                                         },
                                         publicExercises:[],
-                                        privateExercises:resultsPrivateExercise.rows,
+                                        privateExercises:arrayOfPrivateExercises,
                                         publicChanged:publicChanged,
                                         privateChanged:privateChanged,
                                         publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
@@ -765,15 +830,17 @@ router.get('/getExercisesList', async function(req, res) {
                             }
 
                             console.log('RESULT OF Private TRAININGS : ! ',resultsPrivateExercise.rows[0])
-                            // publicExercises = _.orderBy(publicExercises, ['?'],['desc'])
-                            // privateExercises = _.orderBy(privateExercises, ['?'],['desc'])
+                            let arrayOfPublicExercises =  resultsExercisePublic.rows
+                            arrayOfPublicExercises = _.orderBy(arrayOfPublicExercises, ['header.title'],['asc'])
+                            let arrayOfPrivateExercises =  resultsPrivateExercise.rows
+                            arrayOfPrivateExercises = _.orderBy(arrayOfPrivateExercises, ['header.title'],['asc'])
                             return res.status(200).json({
                               response: {
                                 result:'success',
                                 message:''
                               },
-                              publicExercises:resultsExercisePublic.rows,
-                              privateExercises:resultsPrivateExercise.rows,
+                              publicExercises:arrayOfPublicExercises,
+                              privateExercises:arrayOfPrivateExercises,
                               publicChanged:publicChanged,
                               privateChanged:privateChanged,
                               publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
@@ -784,7 +851,8 @@ router.get('/getExercisesList', async function(req, res) {
 
                         }
                         if(userDetail.privateexerciseschangecount < privateExercisesChangeCount){
-                          // publicExercises = _.orderBy(publicExercises, ['?'],['desc'])
+                          let arrayOfPublicExercises =  resultsExercisePublic.rows
+                          arrayOfPublicExercises = _.orderBy(arrayOfPublicExercises, ['header.title'],['asc'])
 
                           privateChanged = false;
                           return res.status(200).json({
@@ -792,7 +860,7 @@ router.get('/getExercisesList', async function(req, res) {
                               result:'success',
                               message:''
                             },
-                            publicExercises:resultsExercisePublic.rows,
+                            publicExercises:arrayOfPublicExercises,
                             privateExercises:[],
                             publicChanged:publicChanged,
                             privateChanged:privateChanged,
@@ -803,14 +871,16 @@ router.get('/getExercisesList', async function(req, res) {
                           });
                         }
                         if(userDetail.privateexerciseschangecount === privateExercisesChangeCount){
-                          // publicExercises = _.orderBy(publicExercises, ['?'],['desc'])
+                          let arrayOfPublicExercises =  resultsExercisePublic.rows
+                          arrayOfPublicExercises = _.orderBy(arrayOfPublicExercises, ['header.title'],['asc'])
+
                           privateChanged = false;
                           return res.status(200).json({
                             response: {
                               result:'success',
                               message:''
                             },
-                            publicExercises:resultsExercisePublic.rows,
+                            publicExercises:arrayOfPublicExercises,
                             privateExercises:[],
                             publicChanged:publicChanged,
                             privateChanged:privateChanged,
@@ -843,14 +913,16 @@ router.get('/getExercisesList', async function(req, res) {
 
                           console.log('RESULT OF Private TRAININGS : ! ',resultsPrivateExercise.rows[0])
 
-                          // privateExercises = _.orderBy(privateExercises, ['?'],['desc'])
+
+                          let arrayOfPrivateExercises =  resultsPrivateExercise.rows
+                          arrayOfPrivateExercises = _.orderBy(arrayOfPrivateExercises, ['header.title'],['asc'])
                           return res.status(200).json({
                             response: {
                               result:'success',
                               message:''
                             },
                             publicExercises:[],
-                            privateExercises:resultsPrivateExercise.rows,
+                            privateExercises:arrayOfPrivateExercises,
                             publicChanged:publicChanged,
                             privateChanged:privateChanged,
                             publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
@@ -915,14 +987,16 @@ router.get('/getExercisesList', async function(req, res) {
                           }
 
                           console.log('RESULT OF Private TRAININGS : ! ',resultsPrivateExercise.rows[0])
-                          // privateExercises = _.orderBy(privateExercises, ['?'],['desc'])
+
+                          let arrayOfPrivateExercises =  resultsPrivateExercise.rows
+                          arrayOfPrivateExercises = _.orderBy(arrayOfPrivateExercises, ['header.title'],['asc'])
                           return res.status(200).json({
                             response: {
                               result:'success',
                               message:''
                             },
                             publicExercises:[],
-                            privateExercises:resultsPrivateExercise.rows,
+                            privateExercises:arrayOfPrivateExercises,
                             publicChanged:publicChanged,
                             privateChanged:privateChanged,
                             publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,

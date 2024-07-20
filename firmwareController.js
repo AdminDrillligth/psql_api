@@ -7,6 +7,7 @@ const { v4: uuidv4 } = require('uuid');
 
 router.use(function timeLog(req, res, next) {
   console.log('Time Firmware Function : ', new Date().toLocaleDateString('en-GB'));
+  
   next();
 
 });
@@ -188,7 +189,7 @@ router.get('/getFirmware', function(req, res) {
             });
           }
           if(results.rowCount === 1){
-            if(results.rows[0].privatefirmwareid !== null ){
+            if(results.rows[0].privatefirmwareid !== ""){
               // Le private Firmware Id ! 
               firmwareId = results.rows[0].privatefirmwareid;
               console.log('RESULTS :we get resp GET FIRMWARE OF : !', results.rows[0].privatefirmwareid)
@@ -196,11 +197,11 @@ router.get('/getFirmware', function(req, res) {
                 response: {
                   result:'success',
                   message:''
-                }
+                },
                 // firmwareList:firmwareList
-                // idUser:idUser,
+                idUser:idUser,
                 // lastPublicFirmwareChangeCount:lastPublicFirmwareChangeCount,
-                // firmwareDetail:firmwareDetail
+                firmwareDetail:results.rows[0].privatefirmwareid
               });
             }else{
               // on get le global firmware ! 
@@ -208,9 +209,11 @@ router.get('/getFirmware', function(req, res) {
                 if (error) {
                   console.log(error)
                 }
-                console.log('ID DU FIRMWARE GLOBAL: ',publicFirmwareId.rows[0].publicfirmwareid)
+                console.log('ID DU FIRMWARE GLOBAL: ',publicFirmwareId.rows[0])
                 
                 const resSelectGlobal = await pool.query('SELECT * FROM firmware_handler WHERE id = $1',[publicFirmwareId.rows[0].publicfirmwareid], (error, selectFirmware) => {
+                  console.log(selectFirmware.rows[0].firmwaredata.firmwareObject)
+                  let firmware = {creationDate :selectFirmware.rows[0].firmwaredata.firmwareObject.creationdate, description:selectFirmware.rows[0].firmwaredata.firmwareObject.description,firmwareData:selectFirmware.rows[0].firmwaredata.firmwareObject.firmwaredata, version:selectFirmware.rows[0].firmwaredata.firmwareObject.version, id:selectFirmware.rows[0].firmwaredata.firmwareObject.id}
                   if (error) {
                     console.log(error)
                   }
@@ -220,11 +223,11 @@ router.get('/getFirmware', function(req, res) {
                       response: {
                         result:'success',
                         message:''
-                      }
+                      },
                       // firmwareList:firmwareList
-                      // idUser:idUser,
+                      idUser:idUser,
                       // lastPublicFirmwareChangeCount:lastPublicFirmwareChangeCount,
-                      // firmwareDetail:firmwareDetail
+                      firmwareDetail:firmware
                     });
                   }
                   
