@@ -40,9 +40,10 @@ router.post('/createFirmware', function(req, res) {
   // // let BuildNumber = 1;
   // let globalHandler  = [];
   // console.log('JSON ', json);
-  console.log('idUser ', idUser);
-  // console.log('firmwareData ', firmwareData);
-  console.log('private', privated);
+  // console.log('idUser ', idUser);
+  console.log('firmwareData ', firmwareData);
+  console.log('firmwareData BASE 64', firmwareData.base64);
+  // console.log('private', privated);
   //  if(privated == false){
   
     // const querySnapshotGlobalHandler = await db.collection('global_handler').get();
@@ -81,11 +82,11 @@ router.post('/createFirmware', function(req, res) {
           };
 
           const res = await pool.query( "INSERT INTO firmware_handler ( id, creationdate, description, firmwaredata, version ) VALUES ($1, $2,$3, $4, $5) RETURNING *",
-            [firmwareObject.id,  firmwareObject.creationdate, firmwareObject.description, {firmwareObject}, firmwareObject.version ], (error, resultsFirm) => {
+            [firmwareObject.id,  firmwareObject.creationdate, firmwareObject.description, firmwareObject.firmwaredata, firmwareObject.version ], (error, resultsFirm) => {
             if (error) {console.log(error) }
 
-    	      console.log(`resultsFirm added Object details: ${resultsFirm.rows[0]}`);
-            console.log(`resultsFirm added with ID: ${resultsFirm.rows[0].id}`,'color: #bada55');
+    	      console.log(`resultsFirm added Object details: ${resultsFirm}`);
+            console.log(`resultsFirm added with ID: ${resultsFirm}`,'color: #bada55');
 	        });
          }
       })    
@@ -96,21 +97,14 @@ router.post('/createFirmware', function(req, res) {
 
 
 router.post('/updateGlobalFirmware', function(req, res) {
-	console.log('firmware')
+	console.log('firmware update global')
   let reqs = req;
   let bodys = reqs.body;
   let globalHandler = [];
-  let headers = reqs.headers;
-  let token = headers.token;
+  let token = bodys.token;
+  let firmwareid = bodys.firmwareid
   console.log('token global : ',token )
-  // let idFirmware = headers.idfirmware;
-
-  // const querySnapshotGlobalHandler = await db.collection('global_handler').get();
-  // querySnapshotGlobalHandler.forEach((doc: any) => {
-  //   globalHandler.push(doc.data());
-  // });
-  // // BuildNumber = globalHandler[0].lastFirmwareBuildNumber +1;
-  // globalHandler[0].publicFirmwareId = newUuid;
+  console.log('firmwareid global : ',firmwareid )
   try {
     // sign token
     jwt.verify(token, 'secret', { expiresIn: '24h' }, async function(err, decoded) {
@@ -122,28 +116,35 @@ router.post('/updateGlobalFirmware', function(req, res) {
           },
         });
        }else {
-        // no error token
-        return res.status(200).json({
-          response: {
-            result:'success',
-            message:'Mise à jour du firmware global effectuée'
-          },        
-          // newfirmwareid:bodys.headers.firmwareid
+        const lastpublicchangecount = await pool.query('SELECT publicfirmwareid FROM global_handler', async (error, globalpublicFirmwareId) => {
+          if (error) {
+            console.log(error)
+          }
+          console.log('globalpublicFirmwareId',globalpublicFirmwareId.rows[0].publicfirmwareid)
 
-        });
+          const responseOfUpdate = pool.query('UPDATE global_handler SET publicfirmwareid = $1 WHERE id = $2',
+            [firmwareid, "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"],
+            (error, resultsOfUpdateGlobal) => {
+              if (error) {
+                throw error
+              }
+              console.log('firmwareid modified with ID:',resultsOfUpdateGlobal.rowCount)
+              return res.status(200).json({
+                response: {
+                  result:'success',
+                  message:'Mise à jour du firmware global effectuée'
+                },        
+                globalfirmwareid:firmwareid
+      
+              });
+            })
+          
+        })
+        // no error token
+        
        }
     
     })
-        // const querySnapshotGlobalHandler = await db.collection('global_handler').get();
-        // querySnapshotGlobalHandler.forEach((doc: any) => {
-        //   globalHandler.push(doc.data());
-        // });
-        // globalHandler[0].publicFirmwareId = bodys.headers.firmwareid;
-        // const global_handlerData = db.collection('global_handler');
-        // global_handlerData.doc("9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d").set(globalHandler[0]);
-
-  //   }
-  // })
   }
   catch(error) { return res.status(500).json(error.message) }
 });
@@ -270,11 +271,17 @@ router.get('/getFirmwaresList', function(req, res) {
           if (error) {
             console.log('error no account: ! ', error)
           }
-          resultsFirmwareList.rows.forEach((firm)=>{
-            firmwareList.push({creationDate: firm.firmwaredata.firmwareObject.creationdate, firmwareData:firm.firmwaredata.firmwareObject.firmwaredata, description: firm.firmwaredata.firmwareObject.description,id:firm.firmwaredata.firmwareObject.id, version: firm.firmwaredata.firmwareObject.version});
+          if(resultsFirmwareList.rowCount > 0 ){
+            // console.log('nous avons des firmwares ! ', resultsFirmwareList.rows[0])
+            let rowsOfFirmware  = resultsFirmwareList.rows;
+          rowsOfFirmware.forEach((firm)=>{
+            firmwareList.push({creationDate: firm.creationdate, firmwareData:firm.firmwaredata, description: firm.description,id:firm.id, version: firm.version});
           })
           // firmwareList
-          console.log('Result of getFirmwaresList : !  ',firmwareList)
+          }
+
+          // firmwareList
+          // console.log('Result of getFirmwaresList : !  ',firmwareList)
           return res.status(200).json({
             response: {
               result:'success',
@@ -374,22 +381,23 @@ router.get('/getGlobalFirmware', function(req, res) {
           if (error) {
             console.log(error)
           }
-          console.log('ID DU FIRMWARE : ',publicFirmwareId.rows[0])
-          if( publicFirmwareId !== undefined){
+          console.log('ID DU FIRMWARE : ',publicFirmwareId.rows[0].publicfirmwareid)
+          if( publicFirmwareId.publicfirmwareid !== undefined || publicFirmwareId.rows[0].publicfirmwareid !== ""){
             const resSelectGlobal = await pool.query('SELECT * FROM firmware_handler WHERE id = $1',[publicFirmwareId.rows[0].publicfirmwareid], (error, SelectGlobal) => {
               if (error) {
                 console.log(error)
               }
-              firm = SelectGlobal.rows[0];
-              let globalFirm = {creationDate: firm.firmwaredata.firmwareObject.creationdate, firmwareData:firm.firmwaredata.firmwareObject.firmwaredata, description: firm.firmwaredata.firmwareObject.description,id:firm.firmwaredata.firmwareObject.id, version: firm.firmwaredata.firmwareObject.version}
-              console.log('Result global detail', globalFirm.id)
+              firmware = SelectGlobal.rows[0];
+              console.log('DETAILS DU FIRMWARE',firmware)
+              // let globalFirm = {creationDate: firm.firmwaredata.firmwareObject.creationdate, firmwareData:firm.firmwaredata.firmwareObject.firmwaredata, description: firm.firmwaredata.firmwareObject.description,id:firm.firmwaredata.firmwareObject.id, version: firm.firmwaredata.firmwareObject.version}
+              // console.log('Result global detail', globalFirm.id)
               return res.status(200).json({
                 response: {
                   result:'success',
                   message:''
                 },
                 
-                globalFirmware:globalFirm
+                // globalFirmware:globalFirm
               });
             })
             
@@ -404,18 +412,6 @@ router.get('/getGlobalFirmware', function(req, res) {
           }
 
         })
-        // no error
-        // if(idUser !== undefined){
-        // const querySnapshotGlobalHandler = await db.collection('global_handler').get();
-        // querySnapshotGlobalHandler.forEach((doc: any) => {
-        //   globalHandler.push(doc.data());
-        // });
-        // let firmwareHandler = await db.collection('firmware-handler').where('id', '==', globalHandler[0].publicFirmwareId).get();
-        // firmwareHandler.forEach(async (doc:any) =>{
-        //   firmwareDetail = doc.data()
-        // });
-        // 
-      // }
     }
   })
   }

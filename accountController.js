@@ -266,7 +266,7 @@ router.get('/getAccountDetails', function(req, res) {
                 if(results.rows[0].role === 'admin' || results.rows[0].role === 'owner' ){
                    accountSelected = results.rows[0];
                       // let's make a CamelCase Object
-                      console.log('we get details: ', accountSelected)
+                      // console.log('we get details: ', accountSelected)
                       let account = {
                         id: id,
                         owner:accountSelected.owner,
@@ -584,11 +584,11 @@ router.get('/getAccountsList', function(req, res) {
                       }
                       // console.log('LENGTH USERS :  ! ',account.id, usersAccount)
                       let validate = false;
-                      console.log('details account',account)
+                      // console.log('details account',account)
                       if(account.passwordhash !== undefined && account.passwordhash !== ""){
                         validate = true;
                       }
-                      console.log('DETAIL OF EACH ACCOUNT : ',account)
+                      // console.log('DETAIL OF EACH ACCOUNT : ',account)
                       
                       accountsAdminsOwners.push({validate: validate, id:account.id, email:account.email, role:account.role, fullName:account.fullname, familyName:account.familyname, firstName:account.firstname, licensed: usersAccount})
                       accountsAdminsOwners = _.orderBy(accountsAdminsOwners, ['fullName'],['asc'])
