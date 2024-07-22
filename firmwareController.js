@@ -328,7 +328,7 @@ router.get('/getFirmwareDetails', function(req, res) {
               console.log(error)
             }
             firm = selectFirmware.rows[0];
-            // let selectFirmware = {creationDate: firm.firmwaredata.firmwareObject.creationdate, firmwareData:firm.firmwaredata.firmwareObject.firmwaredata, description: firm.firmwaredata.firmwareObject.description,id:firm.firmwaredata.firmwareObject.id, version: firm.firmwaredata.firmwareObject.version}
+            let selectFirmwareObject = {creationDate: firm.creationdate, firmwareData:firm.firmwaredata, description: firm.description,id:firm.id, version: firm.version}
             // console.log('Result global detail', globalFirm.id)
             // console.log('Result global detail')
             return res.status(200).json({
@@ -336,7 +336,7 @@ router.get('/getFirmwareDetails', function(req, res) {
                 result:'success',
                 message:''
               },  
-              // globalFirmware:selectFirmware
+              firmwareDetail:selectFirmwareObject
             });
           })
           
@@ -389,7 +389,7 @@ router.get('/getGlobalFirmware', function(req, res) {
               }
               firmware = SelectGlobal.rows[0];
               console.log('DETAILS DU FIRMWARE',firmware)
-              // let globalFirm = {creationDate: firm.firmwaredata.firmwareObject.creationdate, firmwareData:firm.firmwaredata.firmwareObject.firmwaredata, description: firm.firmwaredata.firmwareObject.description,id:firm.firmwaredata.firmwareObject.id, version: firm.firmwaredata.firmwareObject.version}
+              let globalFirm = {creationDate: firmware.creationdate, firmwareData:firmware.firmwaredata, description: firmware.description,id:firmware.id, version: firmware.version}
               // console.log('Result global detail', globalFirm.id)
               return res.status(200).json({
                 response: {
@@ -397,7 +397,7 @@ router.get('/getGlobalFirmware', function(req, res) {
                   message:''
                 },
                 
-                // globalFirmware:globalFirm
+                globalFirmware:globalFirm
               });
             })
             
