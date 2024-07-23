@@ -1064,10 +1064,12 @@ router.get('/getExercisesList', async function(req, res) {
 });
 
 
-router.get('/updateExercise', function(req, res) {
+router.post('/updateExercise', function(req, res) {
   let token = req.headers.token;
   let data = req.body
-  console.log('data to update exercise', data)
+  console.log('data to update exercise', data.json.header)
+  console.log('data to update exercise', data.json.header.users)
+  console.log('token to update exercise', token)
   try{
 
     jwt.verify(token, 'secret', { expiresIn: '30d' }, async function(err, decoded) {
@@ -1079,13 +1081,43 @@ router.get('/updateExercise', function(req, res) {
           }
         });
        }else {
+        if(data.json.header.status === "private"){
+          const resultsOfUpdate = pool.query('UPDATE private_exercise_handler SET * = $1 WHERE id = $2',
+              [data.json, data.json.header.id],
+              (error, results) => {
+                if (error) {
+                  throw error
+                }
+                return res.status(200).json({
+                  response: {
+                    result:'success',
+                    message:''
+                  },
+                  data: data.json
+                });
+               
+              })  
+      }
+        
+        // else{
+          // const resultsOfUpdate = pool.query('UPDATE public_exercise_handler SET users = $1 WHERE id = $2',
+          //   [userDetailOwner.users, dataBodyOfRequest.owner],
+          //   (error, results) => {
+          //     if (error) {
+          //       throw error
+          //     }
+          //     return res.status(200).json({
+          //       response: {
+          //         result:'success',
+          //         message:''
+          //       },
+          //     });
+          //     console.log('User modified with ID:',results.rows)
+          //   })
+          // }
+        
         // no error token
-        return res.status(200).json({
-          response: {
-            result:'success',
-            message:''
-          },
-        });
+        
        }
     })
   }catch(error){ return res.status(500).json(error.message) }
