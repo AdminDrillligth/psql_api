@@ -314,9 +314,10 @@ router.get('/getExercisesList', async function(req, res) {
           }else{
             // console.log('le user de ces exos : ? ', resultsUser.rows[0])
             userDetail = resultsUser.rows[0];
-            console.log('If private only ?',userDetail.privateonly)
+            console.log('If role ?',userDetail.role)
             console.log('List of selected trainings :',userDetail.trainings)
-            console.log("privateexerciseschangecount :: ! ", userDetail.privateexerciseschangecount )
+            console.log('List of selected exercises :',userDetail.exercises)
+            // console.log("privateexerciseschangecount :: ! ", userDetail.privateexerciseschangecount )
             if(userDetail.trainings !== undefined ){
               const lastpublicchangecount = await pool.query('SELECT "lastPublicChangeCount" FROM global_handler', async (error, lastpublicchangecount) => {
                 if (error) {
@@ -331,7 +332,7 @@ router.get('/getExercisesList', async function(req, res) {
                 }
                 else{
                   if(lastpublicchangecount.rows !== undefined){
-                    console.log('le last public change count: Before get infos inside APP', lastpublicchangecount.rows)
+                    // console.log('le last public change count: Before get infos inside APP', lastpublicchangecount.rows)
                   }
                 }
               })
@@ -343,13 +344,18 @@ router.get('/getExercisesList', async function(req, res) {
                                 console.log(error)
                               }
                               if(resultsExercise.rowCount > 0){
+                                if(userDetail.exercises.length > 0 ){
+                                  console.log('Les exos privés',resultsExercise.rows[0])
+                                }
                                 // countOfSelectedTrainings ++
                                 privateExercises.push(resultsExercise.rows[0])
                                 console.log('RESULT OF USER SELECTED TRAININGS PRIVATE : ! ',resultsExercise.rows)
-                                  console.log('COUNT SELECTED PRIVATE END: ! ',countOfSelectedTrainings)
-                                  console.log('TRAININGS LENGTH: END! ',countOfSelectedTrainingsInside)
-                                  console.log('RESULT LENGTH : ', privateExercises.length, publicExercises.length)
+                                console.log('Details of length : ! ',countOfSelectedTrainings, userDetail.trainings.length) 
+                                // console.log('COUNT SELECTED PRIVATE END: ! ',countOfSelectedTrainings)
+                                  // console.log('TRAININGS LENGTH: END! ',countOfSelectedTrainingsInside)
+                                  // console.log('RESULT LENGTH : ', privateExercises.length, publicExercises.length)
                                   privateExercises = _.orderBy(privateExercises, ['header.title'],['asc'])
+                                  console.log('RESULT DETAILS PRIVATE ET PUBLIC: ! ',publicExercises, privateExercises)
                                   return res.status(200).json({
                                     response: {
                                       result:'success',
@@ -371,21 +377,22 @@ router.get('/getExercisesList', async function(req, res) {
                           console.log('TRAININGS LENGTH: ! ',userDetail.trainings.length)
                           userDetail.trainings.forEach(training => {
                           countOfSelectedTrainingsInside ++;
-                          console.log('Details id : ', training)            
+                          // console.log('Details id : ', training)            
                           pool.query('SELECT * FROM public_exercise_handler WHERE id = $1',[training], async (error, resultsExercise) => {
                             if (error) {
                               console.log(error)
                             }
                             if(resultsExercise.rowCount > 0){
                               countOfSelectedTrainings ++
-                              console.log('RESULT OF USER SELECTED TRAININGS PUBLIC : ! ',resultsExercise.rows)
+                              // console.log('RESULT OF USER SELECTED TRAININGS PUBLIC : ! ',resultsExercise.rows)
                               publicExercises.push(resultsExercise.rows[0])
                               if(countOfSelectedTrainings === userDetail.trainings.length){  
-                                console.log('COUNT SELECTED PUBLIC END: ! ',countOfSelectedTrainings)
-                                console.log('TRAININGS LENGTH: END! ',countOfSelectedTrainingsInside)
-                                console.log('RESULT LENGTH : ', privateExercises.length, publicExercises.length)
+                                // console.log('COUNT SELECTED PUBLIC END: ! ',countOfSelectedTrainings)
+                                // console.log('TRAININGS LENGTH: END! ',countOfSelectedTrainingsInside)
+                                // console.log('RESULT LENGTH : ', privateExercises.length, publicExercises.length)
                                 publicExercises = _.orderBy(publicExercises, ['header.title'],['asc'])
                                 privateExercises = _.orderBy(privateExercises, ['header.title'],['asc'])
+                                console.log('RESULT DETAILS PRIVATE ET PUBLIC: ! ',publicExercises, privateExercises)
                                 return res.status(200).json({
                                   response: {
                                     result:'success',
@@ -411,12 +418,14 @@ router.get('/getExercisesList', async function(req, res) {
                               countOfSelectedTrainings ++
                               privateExercises.push(resultsExercise.rows[0])
                               console.log('RESULT OF USER SELECTED TRAININGS PRIVATE : ! ',resultsExercise.rows)
+                              console.log('Details of length : ! ',countOfSelectedTrainings, userDetail.trainings.length)
                               if(countOfSelectedTrainings === userDetail.trainings.length){
-                                console.log('COUNT SELECTED PRIVATE END: ! ',countOfSelectedTrainings)
-                                console.log('TRAININGS LENGTH: END! ',countOfSelectedTrainingsInside)
-                                console.log('RESULT LENGTH : ', privateExercises.length, publicExercises.length)
+                                // console.log('COUNT SELECTED PRIVATE END: ! ',countOfSelectedTrainings)
+                                // console.log('TRAININGS LENGTH: END! ',countOfSelectedTrainingsInside)
+                                // console.log('RESULT LENGTH : ', privateExercises.length, publicExercises.length)
                                 publicExercises = _.orderBy(publicExercises, ['header.title'],['asc'])
                                 privateExercises = _.orderBy(privateExercises, ['header.title'],['asc'])
+                                console.log('RESULT DETAILS PRIVATE ET PUBLIC: ! ',publicExercises, privateExercises)
                                 return res.status(200).json({
                                   response: {
                                     result:'success',
@@ -448,33 +457,74 @@ router.get('/getExercisesList', async function(req, res) {
                           // BIG TODO
                           if(userDetail.privateexerciseschangecount > privateExercisesChangeCount){
                             privateChanged = true;
-                            pool.query('SELECT * FROM private_exercise_handler WHERE owner = $1',[idUser], async (error, resultsPrivateExercise) => {
-                              if (error) {
-                                console.log(error)
-                                // res.status(400).json({
-                                //   response: {
-                                //     result: 'errorRequest',
-                                //     message: error
-                                //   }
-                                // });
-                              }
-                              console.log('RESULT OF Private TRAININGS : ! ',resultsPrivateExercise.rows[0])
+                            let dedicatedPrivateExercise = [];
+                            console.log('on va get les privates')
+                            if(userDetail.exercises.length > 0 && userDetail.role === 'owner'){
+                              userDetail.exercises.forEach(exoprivate =>{
+                                console.log('les exos du private only ', exoprivate)
+                                pool.query('SELECT * FROM private_exercise_handler WHERE id = $1', [exoprivate], async (error, resultsPrivateExerciseUser) => {
+                                  if (error) {
+                                    console.log(error);
+                                  }
+                                  console.log('Result of private only ',resultsPrivateExerciseUser.rows)
+                                  dedicatedPrivateExercise.push(resultsPrivateExerciseUser.rows[0])
+                                  if(userDetail.exercises.length === dedicatedPrivateExercise.length){
+                                    console.log('on va get les privates nous avons les resultats')
+                                    let arrayOfPrivateExercises =  resultsPrivateExerciseUser.rows
+                                    arrayOfPrivateExercises = _.orderBy(dedicatedPrivateExercise, ['header.title'],['asc'])
+                                    return res.status(200).json({
+                                      response: {
+                                        result:'success',
+                                        message:''
+                                      },
+                                      publicExercises:[],
+                                      privateExercises:arrayOfPrivateExercises,
+                                      publicChanged:false,
+                                      privateChanged:true,
+                                      publicExercisesChangeCount:1,
+                                      privateExercisesChangeCount:userDetail.privateexerciseschangecount
+                                      // idUser:idUser,
+                                    });
 
-                              let arrayOfPrivateExercises =  resultsExercisePublic.rows
-                              arrayOfPrivateExercises = _.orderBy(arrayOfPrivateExercises, ['header.title'],['asc'])
-                              return res.status(200).json({
-                                response: {
-                                  result:'success',
-                                  message:''
-                                },
-                                publicExercises:[],
-                                privateExercises:arrayOfPrivateExercises,
-                                publicChanged:false,
-                                privateChanged:true,
-                              });
-                            })
+                                  }
+                                })
+
+                              })
+
+                            }
+                            // pool.query('SELECT * FROM private_exercise_handler WHERE owner = $1',[idUser], async (error, resultsPrivateExercise) => {
+                            //   if (error) {
+                            //     console.log(error)
+                            //     // res.status(400).json({
+                            //     //   response: {
+                            //     //     result: 'errorRequest',
+                            //     //     message: error
+                            //     //   }
+                            //     // });
+                            //   }
+                            //   console.log('RESULT OF Private TRAININGS : ! ',resultsPrivateExercise.rows[0])
+                             
+                            //   let arrayOfPrivateExercises =  resultsPrivateExercise.rows
+                            //   if(userDetail.exercises.length > 0 ){
+                            //     console.log('Les exos privés',arrayOfPrivateExercises)
+                            //   }
+                            //   arrayOfPrivateExercises = _.orderBy(arrayOfPrivateExercises, ['header.title'],['asc'])
+                            //   return res.status(200).json({
+                            //     response: {
+                            //       result:'success',
+                            //       message:''
+                            //     },
+                            //     publicExercises:[],
+                            //     privateExercises:arrayOfPrivateExercises,
+                            //     publicChanged:false,
+                            //     privateChanged:true,
+                            //   });
+                            // })
                           }
                           if(userDetail.privateexerciseschangecount < privateExercisesChangeCount){
+                            if(userDetail.exercises.length > 0 ){
+                              console.log('Les exos privés',arrayOfPrivateExercises)
+                            }
                             privateChanged = false;
                             return res.status(200).json({
                               response: {
@@ -488,6 +538,9 @@ router.get('/getExercisesList', async function(req, res) {
                             });
                           }
                           if(userDetail.privateexerciseschangecount === privateExercisesChangeCount){
+                            if(userDetail.exercises.length > 0 ){
+                              console.log('Les exos privés',arrayOfPrivateExercises)
+                            }
                             privateChanged = false;
                             return res.status(200).json({
                               response: {
@@ -518,10 +571,11 @@ router.get('/getExercisesList', async function(req, res) {
                   
                             }
                             else{
+                              console.log('lastpublicchangecount.rows',lastpublicchangecount.rows)
                               if(lastpublicchangecount.rows !== undefined){
                                 // si nous avons bien un résultat dans le global handler
-                                console.log('result after get last result !!! ')
-                                console.log('result lastpublicchangecount : ', lastpublicchangecount.rows[0].lastPublicChangeCount , 'le send is : ', publicExercisesChangeCount)
+                                // console.log('result after get last result !!! ')
+                                // console.log('result lastpublicchangecount : ', lastpublicchangecount.rows[0].lastPublicChangeCount , 'le send is : ', publicExercisesChangeCount)
                                 if(lastpublicchangecount.rows[0].lastPublicChangeCount > publicExercisesChangeCount){
                                   publicChanged = true;                                
                                   const resSelect = await pool.query('SELECT * FROM public_exercise_handler WHERE status = $1',['public'], async (error, resultsExercisePublic) => {
@@ -534,38 +588,70 @@ router.get('/getExercisesList', async function(req, res) {
                                       //   }
                                       // });
                                     }
+                                    console.log('LES CHANGS COUNT : ',userDetail.privateexerciseschangecount ,privateExercisesChangeCount )
                                     if(userDetail.privateexerciseschangecount > privateExercisesChangeCount){
+                                      let dedicatedPrivateExercise = [];
                                       privateChanged = true;
-                                      pool.query('SELECT * FROM private_exercise_handler WHERE owner = $1', [idUser], async (error, resultsPrivateExercise) => {
-                                        if (error) {
-                                          console.log(error);
-                                          // res.status(400).json({
-                                          //   response: {
-                                          //     result: 'errorRequest',
-                                          //     message: error
-                                          //   }
-                                          // });
-                                        }
-                                        console.log('RESULT OF Private TRAININGS : ! ', resultsPrivateExercise.rows[0]);
-                                        let arrayOfPublicExercises =  resultsExercisePublic.rows
-                                        arrayOfPublicExercises = _.orderBy(arrayOfPublicExercises, ['header.title'],['asc'])
-                                        let arrayOfPrivateExercises =  resultsPrivateExercise.rows
-                                        arrayOfPrivateExercises = _.orderBy(arrayOfPrivateExercises, ['header.title'],['asc'])
-                                        return res.status(200).json({
-                                          response: {
-                                            result:'success',
-                                            message:''
-                                          },
-                                          publicExercises:arrayOfPublicExercises,
-                                          privateExercises:arrayOfPrivateExercises,
-                                          publicChanged:publicChanged,
-                                          privateChanged:privateChanged,
-                                          publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
-                                          privateExercisesChangeCount:userDetail.privateexerciseschangecount
-                                          // idUser:idUser,
-                                        });
+                                      console.log('On veut les exos privés en mode owner : !',userDetail)
+                                      if(userDetail.exercises.length > 0 && userDetail.role === 'owner'){
                                         
-                                      })
+                                        console.log('Les exos privés mode webapp',userDetail)
+                                        userDetail.exercises.forEach(exoprivate =>{
+                                          console.log('les exos', exoprivate)
+                                          pool.query('SELECT * FROM private_exercise_handler WHERE id = $1', [exoprivate], async (error, resultsPrivateExerciseUser) => {
+                                            if (error) {
+                                              console.log(error);
+                                            }
+                                            // console.log('le result of private exo : ', resultsPrivateExerciseUser.rows[0])
+                                            dedicatedPrivateExercise.push(resultsPrivateExerciseUser.rows[0])
+                                            if(userDetail.exercises.length === dedicatedPrivateExercise.length){
+                                              console.log('nous passons cette etape === : ! ', dedicatedPrivateExercise)
+                                              let arrayOfPublicExercises =  resultsExercisePublic.rows
+                                                arrayOfPublicExercises = _.orderBy(arrayOfPublicExercises, ['header.title'],['asc'])
+                                                let arrayOfPrivateExercises =  resultsPrivateExerciseUser.rows
+                                                arrayOfPrivateExercises = _.orderBy(dedicatedPrivateExercise, ['header.title'],['asc'])
+                                                  return res.status(200).json({
+                                                    response: {
+                                                      result:'success',
+                                                      message:''
+                                                    },
+                                                    publicExercises:arrayOfPublicExercises,
+                                                    privateExercises:arrayOfPrivateExercises,
+                                                    publicChanged:publicChanged,
+                                                    privateChanged:privateChanged,
+                                                    publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
+                                                    privateExercisesChangeCount:userDetail.privateexerciseschangecount
+                                                    // idUser:idUser,
+                                                  });
+                                            }
+                                          })
+                                        })
+                                      }else{
+                                        // Si le user n'a pas de exercise dans sa base
+                                        pool.query('SELECT * FROM private_exercise_handler', async (error, resultsPrivateExerciseUser) => {
+                                          if (error) {
+                                            console.log(error);
+                                          }
+                                          let arrayOfPublicExercises =  resultsExercisePublic.rows
+                                          arrayOfPublicExercises = _.orderBy(arrayOfPublicExercises, ['header.title'],['asc'])
+                                          let arrayOfPrivateExercises =  resultsPrivateExerciseUser.rows
+                                          arrayOfPrivateExercises = _.orderBy(arrayOfPrivateExercises, ['header.title'],['asc'])
+                                            return res.status(200).json({
+                                              response: {
+                                                result:'success',
+                                                message:''
+                                              },
+                                              publicExercises:arrayOfPublicExercises,
+                                              privateExercises:arrayOfPrivateExercises,
+                                              publicChanged:publicChanged,
+                                              privateChanged:privateChanged,
+                                              publicExercisesChangeCount:lastpublicchangecount.rows[0].lastPublicChangeCount,
+                                              privateExercisesChangeCount:userDetail.privateexerciseschangecount
+                                              // idUser:idUser,
+                                          });
+
+                                        })        
+                                      }
                                     }
                                     if(userDetail.privateexerciseschangecount < privateExercisesChangeCount){
                                       let arrayOfPublicExercises =  resultsExercisePublic.rows
@@ -627,6 +713,9 @@ router.get('/getExercisesList', async function(req, res) {
 
                                       let arrayOfPrivateExercises =  resultsPrivateExercise.rows
                                       arrayOfPrivateExercises = _.orderBy(arrayOfPrivateExercises, ['header.title'],['asc'])
+                                      if(userDetail.exercises.length > 0 ){
+                                        console.log('Les exos privés mode webapp',arrayOfPrivateExercises)
+                                      }
                                       return res.status(200).json({
                                         response: {
                                           result:'success',
@@ -692,11 +781,14 @@ router.get('/getExercisesList', async function(req, res) {
                                         // });
                                       }
                                         // privateExercises = _.orderBy(privateExercises, ['?'],['desc'])
-                                      console.log('RESULT OF Private TRAININGS : ! ',resultsPrivateExercise.rows[0])
+                                      // console.log('RESULT OF Private TRAININGS : ! ',resultsPrivateExercise.rows[0])
 
                                         let arrayOfPrivateExercises =  resultsPrivateExercise.rows
                                         arrayOfPrivateExercises = _.orderBy(arrayOfPrivateExercises, ['header.title'],['asc'])
-                                      return res.status(200).json({
+                                        if(userDetail.exercises.length > 0 ){
+                                          console.log('Les exos privés mode webapp',arrayOfPrivateExercises)
+                                        }
+                                        return res.status(200).json({
                                         response: {
                                           result:'success',
                                           message:''

@@ -194,11 +194,12 @@ router.post('/createAccount',async function(req, res) {
                 update:DateString,
                 privatefirmwareid:privateFirmwareId,
                 updateiso:isoDateString,
-                privateonly:privateOnly
+                privateonly:privateOnly,
+                exercicses:[]
             }
             console.log(`User added with ID: `, userObject );
-              const resp = pool.query( "INSERT INTO account_handler ( id, role, owner, email, passwordhash, firstname, familyname, fullname , personalinfo, privileges, users, staff, econes, trainings, videos, licensed, warning, date, dateiso, update, updateiso, privateonly, avatarurl ) VALUES ($1, $2,$3, $4,$5, $6,$7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23) RETURNING *",
-                [userObject.id,  userObject.role, userObject.owner, userObject.email, userObject.passwordhash, userObject.firstname, userObject.familyname, userObject.fullname , userObject.personalinfo, userObject.privileges, userObject.users, userObject.staff, userObject.econes, userObject.trainings, userObject.videos, userObject.licensed, userObject.warning, userObject.date, userObject.dateiso, userObject.update, userObject.updateiso, userObject.privateonly, userObject.avatarurl ]
+              const resp = pool.query( "INSERT INTO account_handler ( id, role, owner, email, passwordhash, firstname, familyname, fullname , personalinfo, privileges, users, staff, econes, trainings, videos, licensed, warning, date, dateiso, update, updateiso, privateonly, avatarurl ,exercicses) VALUES ($1, $2,$3, $4,$5, $6,$7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23) RETURNING *",
+                [userObject.id,  userObject.role, userObject.owner, userObject.email, userObject.passwordhash, userObject.firstname, userObject.familyname, userObject.fullname , userObject.personalinfo, userObject.privileges, userObject.users, userObject.staff, userObject.econes, userObject.trainings, userObject.videos, userObject.licensed, userObject.warning, userObject.date, userObject.dateiso, userObject.update, userObject.updateiso, userObject.privateonly, userObject.avatarurl , userObject.exercicses]
               , (error, results) => {if (error) { throw error }
               if(results){
                 // console.log(`User added with ID: ${results.rows[0].id}`);
@@ -312,7 +313,8 @@ router.get('/getAccountDetails', function(req, res) {
                         update:accountSelected.update,
                         privateFirmwareId:accountSelected.privatefirmwareid,
                         updateIso:accountSelected.updateiso,
-                        privateOnly:accountSelected.privateonly
+                        privateOnly:accountSelected.privateonly,
+                        exercises:accountSelected.exercises
 
                       }
                   //  console.log('RESULTS AFTER SELECT ADMIN : ', accountSelected.users, accountSelected.users.length)
@@ -684,7 +686,7 @@ router.post('/updateAccount', async (req, res) => {
                   console.log('USER ID : ',staff.id)
                   delete staff.validate; delete staff.email; delete staff.fullName;delete staff.familyName;delete staff.firstName;delete staff.role;
                 })
-                const resUpdate = pool.query('UPDATE account_handler SET email = $1, firstname = $2, familyname = $3, fullname = $4, avatarurl= $5, role =$6, personalinfo = $7, users = $8, staff = $9, econes = $10, trainings = $11, videos = $12, licensed = $13, warning = $14, privateonly = $15, privatefirmwareid = $16 WHERE id = $17',
+                const resUpdate = pool.query('UPDATE account_handler SET email = $1, firstname = $2, familyname = $3, fullname = $4, avatarurl= $5, role =$6, personalinfo = $7, users = $8, staff = $9, econes = $10, trainings = $11, videos = $12, licensed = $13, warning = $14, privateonly = $15, privatefirmwareid = $16 , exercises = $17 WHERE id = $18',
                 // Order to veritfy integrity of this model ! 
                   [ 
                     dataBodyOfRequest.email,
@@ -703,6 +705,7 @@ router.post('/updateAccount', async (req, res) => {
                     dataBodyOfRequest.warning,
                     dataBodyOfRequest.privateOnly,
                     dataBodyOfRequest.privateFirmwareId,
+                    dataBodyOfRequest.exercises,
                     idUser
                   ],
                   (error, resultsUpdatedAccount) => {
