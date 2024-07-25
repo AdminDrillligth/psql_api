@@ -1223,34 +1223,36 @@ router.post('/deleteExercise', function(req, res) {
   let data = req.body
   // delete data.json.selected;
   console.log('data delete exercise', data)
-  if(data.json.status === 'private'){
-    pool.query('DELETE FROM private_exercise_handler WHERE id = $1', [data.json.header.id], (error, results) => {
-      if (error) {
-        throw error
-      }
-      console.log('we deleted this exercise ::! ', results.rows[0])
-      return res.status(200).json({
-        response: {
-          result:'success',
-          message:''
-        },
-      });
-    })
-  }else{
-    pool.query('DELETE FROM public_exercise_handler WHERE id = $1', [data.json.header.id], (error, results) => {
-      if (error) {
-        throw error
-      }
-      console.log('we deleted this exercise ::! ', results.rows[0])
-      return res.status(200).json({
-        response: {
-          result:'success',
-          message:''
-        },
-      });
-    })
+  try{
+    if(data.json.status === 'private'){
+      pool.query('DELETE FROM private_exercise_handler WHERE id = $1', [data.json.header.id], (error, results) => {
+        if (error) {
+          throw error
+        }
+        console.log('we deleted this exercise ::! ', results.rows[0])
+        return res.status(200).json({
+          response: {
+            result:'success',
+            message:''
+          },
+        });
+      })
+    }else{
+      pool.query('DELETE FROM public_exercise_handler WHERE id = $1', [data.json.header.id], (error, results) => {
+        if (error) {
+          throw error
+        }
+        console.log('we deleted this exercise ::! ', results.rows[0])
+        return res.status(200).json({
+          response: {
+            result:'success',
+            message:''
+          },
+        });
+      })
+    }
   }
-  
+  catch(error) { return res.status(500).json(error.message) }
 })
 
 

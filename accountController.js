@@ -732,4 +732,29 @@ router.post('/updateAccount', async (req, res) => {
   catch(error) { return res.status(500).json(error.message) }
 })
 
+
+
+router.post('/deleteExercise', function(req, res) {
+  let token = req.headers.token;
+  let data = req.body
+  // delete data.json.selected;
+  try{
+    console.log('data delete account', data)
+
+    pool.query('DELETE FROM account_handler WHERE id = $1', [data.id], (error, results) => {
+      if (error) {
+        throw error
+      }
+      console.log('we deleted this account ::! ', results.rows[0])
+      return res.status(200).json({
+        response: {
+          result:'success',
+          message:''
+        },
+      });
+    })
+  }
+  catch(error) { return res.status(500).json(error.message) }
+})
+
 module.exports = router;
