@@ -195,11 +195,11 @@ router.post('/createAccount',async function(req, res) {
                 privatefirmwareid:privateFirmwareId,
                 updateiso:isoDateString,
                 privateonly:privateOnly,
-                exercicses:[]
+                exercises:[]
             }
             console.log(`User added with ID: `, userObject );
-              const resp = pool.query( "INSERT INTO account_handler ( id, role, owner, email, passwordhash, firstname, familyname, fullname , personalinfo, privileges, users, staff, econes, trainings, videos, licensed, warning, date, dateiso, update, updateiso, privateonly, avatarurl ,exercicses) VALUES ($1, $2,$3, $4,$5, $6,$7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23) RETURNING *",
-                [userObject.id,  userObject.role, userObject.owner, userObject.email, userObject.passwordhash, userObject.firstname, userObject.familyname, userObject.fullname , userObject.personalinfo, userObject.privileges, userObject.users, userObject.staff, userObject.econes, userObject.trainings, userObject.videos, userObject.licensed, userObject.warning, userObject.date, userObject.dateiso, userObject.update, userObject.updateiso, userObject.privateonly, userObject.avatarurl , userObject.exercicses]
+              const resp = pool.query( "INSERT INTO account_handler ( id, role, owner, email, passwordhash, firstname, familyname, fullname , personalinfo, privileges, users, staff, econes, trainings, videos, licensed, warning, date, dateiso, update, updateiso, privateonly, avatarurl ,exercises) VALUES ($1, $2,$3, $4,$5, $6,$7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24) RETURNING *",
+                [userObject.id,  userObject.role, userObject.owner, userObject.email, userObject.passwordhash, userObject.firstname, userObject.familyname, userObject.fullname , userObject.personalinfo, userObject.privileges, userObject.users, userObject.staff, userObject.econes, userObject.trainings, userObject.videos, userObject.licensed, userObject.warning, userObject.date, userObject.dateiso, userObject.update, userObject.updateiso, userObject.privateonly, userObject.avatarurl , userObject.exercises]
               , (error, results) => {if (error) { throw error }
               if(results){
                 // console.log(`User added with ID: ${results.rows[0].id}`);
@@ -468,13 +468,67 @@ router.get('/getAccountDetails', function(req, res) {
                    }
                 }else{
                   // Not owner or admin
+                  accountSelected = results.rows[0];
+                  // let's make a CamelCase Object
+                  // console.log('we get details: ', accountSelected)
+                  let account = {
+                    id: id,
+                    owner:accountSelected.owner,
+                    role:accountSelected.role,
+                    email: accountSelected.email,
+                    firstName: accountSelected.firstname,
+                    familyName: accountSelected.familyname,
+                    fullName: accountSelected.fullname,
+                    avatarurl: accountSelected.avatarurl,
+                    personalInfo: {
+                        // birthdate: accountSelected.personalinfo.birthdate,
+                        // simpleBirthdate: accountSelected.personalinfo.simplebirthdate,
+                        // address1: accountSelected.personalinfo.address1,
+                        // address2: accountSelected.personalinfo.address2,
+                        // zip: accountSelected.personalinfo.zip,
+                        // city: accountSelected.personalinfo.city,
+                        // region: accountSelected.personalinfo.region,
+                        // phone: accountSelected.personalinfo.phone,
+                        // comment: accountSelected.personalinfo.comment
+                        birthdate: "",
+                        simpleBirthdate: "",
+                        address1: "",
+                        address2: "",
+                        zip: "",
+                        city: "",
+                        region: "",
+                        phone: "",
+                        comment: ""
+                    },
+                    privileges: {
+                        rights: accountSelected.privileges.rights
+                    },
+                    users:accountSelected.users,
+                    privateExercisesChangeCount:accountSelected.privateexerciseschangecount,
+                    staff: accountSelected.staff,
+                    econes: accountSelected.econes,
+                    trainings: accountSelected.trainings,
+                    videos: accountSelected.videos,
+                    licensed: accountSelected.licensed,
+                    warning:accountSelected.warning,
+                    date:accountSelected.date,
+                    dateIso:accountSelected.dateiso,
+                    update:accountSelected.update,
+                    privateFirmwareId:accountSelected.privatefirmwareid,
+                    updateIso:accountSelected.updateiso,
+                    privateOnly:accountSelected.privateonly,
+                    exercises:accountSelected.exercises
+
+                  }
+
+
                   res.status(200).json({
                     response: {
                       result: 'success',
                       message: ''
                     },
                     role:results.rows[0].role,
-                    account:results.rows[0]
+                    account:account
                   });
                 }
               }
@@ -734,27 +788,113 @@ router.post('/updateAccount', async (req, res) => {
 
 
 
-router.post('/deleteExercise', function(req, res) {
+router.post('/deleteUser', function(req, res) {
   let token = req.headers.token;
   let data = req.body
-  // delete data.json.selected;
-  try{
-    console.log('data delete account', data)
+  let ownerDataId = ""
+  let accountUser = [];
 
-    pool.query('DELETE FROM account_handler WHERE id = $1', [data.id], (error, results) => {
+  let accountOwner = [];
+
+  try{
+    pool.query('SELECT * FROM account_handler WHERE id = $1',[data.id], async (error, resultsOfAccountOfUser) => {
       if (error) {
-        throw error
+        console.log('error no account: ! ', error)
       }
-      console.log('we deleted this account ::! ', results.rows[0])
-      return res.status(200).json({
-        response: {
-          result:'success',
-          message:''
-        },
-      });
+      console.log('le result du get user for owner : ; ',resultsOfAccountOfUser.rows[0].owner)
+      ownerDataId = resultsOfAccountOfUser.rows[0].owner
+      accountUser = resultsOfAccountOfUser.rows[0]
+      pool.query('SELECT * FROM account_handler WHERE id = $1',[resultsOfAccountOfUser.rows[0].owner], async (error, resultsOfAccountOfOwner) => {
+        if (error) {
+          console.log('error no account: ! ', error)
+        }
+        // console.log('le result du get owner : ; ',resultsOfAccountOfOwner.rows[0])
+        console.log('le result du get owner : ; ',resultsOfAccountOfOwner.rows)
+        accountOwner = resultsOfAccountOfOwner.rows[0]
+        accountOwner.users.forEach((user, index)=>{
+          if(user.id === data.id ){
+            console.log('le log user MEME ID ::',user.id,  data.id, index)
+            accountOwner.users.splice(index, 1);
+            console.log('New array',accountOwner.users)
+          }
+          console.log('New array',accountOwner.users)
+  
+          console.log('New array',accountOwner.id)
+          pool.query('UPDATE account_handler SET users = $1 WHERE id = $2',
+          [ accountOwner.users, accountOwner.id ],
+          (error, resultsUpdatedAccount) => {
+            if (error) {
+              throw error
+            }
+            console.log('User deleted with ID:',resultsUpdatedAccount)
+            
+      })
+      })
+    })
+    
+
+
+    //   pool.query('DELETE FROM account_handler WHERE id = $1', [data.id], (error, resultsOfDeleteAccount) => {
+    //     if (error) {
+    //       throw error
+    //     }
+    //     console.log('we deleted this account ::! ', resultsOfDeleteAccount.rows[0])
+    //     return res.status(200).json({
+    //       response: {
+    //         result:'success',
+    //         message:''
+    //       },
+    //     });
+    //   })
     })
   }
   catch(error) { return res.status(500).json(error.message) }
 })
+
+
+
+router.get('/deleteSpecialUser', function(req, res) {
+
+  // delete data.json.selected;
+  try{
+    // console.log('data delete account', data)
+
+    const resSelect = pool.query('SELECT * FROM account_handler WHERE id = $1',["734db9ad-1876-45e5-804b-fe11425537b6"], async (error, resultsOfAccount) => {
+      if (error) {
+        console.log('error no account: ! ', error)
+      }
+      resultsOfAccount.rows[0].users = resultsOfAccount.rows[0].users.filter(user => user.id !== "662b0050-cb08-4e2a-8604-c052f5576261")
+      console.log(resultsOfAccount.rows[0].users)
+      // if(resultsOfAccount.rows[0].users === "")
+      console.log('LES NOUVELLES ROWS : ! ',resultsOfAccount.rows[0].users)
+      const resUpdate = pool.query('UPDATE account_handler SET users = $1 WHERE id = $2',
+ 
+          [ 
+   
+            resultsOfAccount.rows[0].users,
+
+            "734db9ad-1876-45e5-804b-fe11425537b6"
+          ],
+          (error, resultsUpdatedAccount) => {
+            if (error) {
+              throw error
+            }
+            return res.status(200).json({
+              response: {
+                result:'success',
+                message:''
+              },
+              // resp:resultsUpdatedAccount.rows
+            });
+
+          })
+      
+    })
+  }
+  catch(error) { return res.status(500).json(error.message) }
+})
+
+
+
 
 module.exports = router;
