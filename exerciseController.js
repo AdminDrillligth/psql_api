@@ -1160,7 +1160,8 @@ router.post('/updateImagesExercise', function(req, res) {
   // here we gone to update the image of exercise in base 64
   let token = req.headers.token;
   let data = req.body
-  console.log('update Exercise',data)
+  console.log('update Exercise base64 ',data.base64)
+  console.log('update Exercise exo',data.exercise.header.id)
   try{
 
     jwt.verify(token, 'secret', { expiresIn: '30d' }, async function(err, decoded) {
@@ -1173,7 +1174,22 @@ router.post('/updateImagesExercise', function(req, res) {
         });
        }else {
 
-
+            const resp = pool.query( "INSERT INTO images_exercises ( id, base64) VALUES ($1, $2) RETURNING *",
+                [data.exercise.header.id,  data.base64]
+              , (error, results) => {if (error) { throw error }
+              if(results){
+                // console.log(`User added with ID: ${results.rows[0].id}`);
+                  res.status(200).json({
+                    response: {
+                      result: 'success',
+                      message: ''
+                    },
+                    // account: userObject
+                  });
+                }
+               
+                // console.log(userObject);
+              });
        }
     })
   }catch(error){ return res.status(500).json(error.message) }
@@ -1184,7 +1200,8 @@ router.post('/updateVideosExercise', function(req, res) {
   // here we gone to update the image of exercise in base 64
   let token = req.headers.token;
   let data = req.body
-  console.log('update Videos',data)
+  // console.log('update Exercise base64 ',data.base64)
+  console.log('update Exercise exo',data.exercise.header.id)
   try{
 
     jwt.verify(token, 'secret', { expiresIn: '30d' }, async function(err, decoded) {
@@ -1197,7 +1214,22 @@ router.post('/updateVideosExercise', function(req, res) {
         });
        }else {
 
-
+        // const resp = pool.query( "INSERT INTO videos_exercises ( id, base64) VALUES ($1, $2) RETURNING *",
+        //   [data.exercise.header.id,  data.base64]
+        // , (error, results) => {if (error) { throw error }
+        // if(results){
+        //   // console.log(`User added with ID: ${results.rows[0].id}`);
+        //     res.status(200).json({
+        //       response: {
+        //         result: 'success',
+        //         message: ''
+        //       },
+        //       // account: userObject
+        //     });
+        //   }
+         
+          // console.log(userObject);
+        // });
        }
     })
   }catch(error){ return res.status(500).json(error.message) }
