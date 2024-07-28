@@ -1156,6 +1156,53 @@ router.get('/getExercisesList', async function(req, res) {
 });
 
 
+router.post('/updateImagesExercise', function(req, res) {
+  // here we gone to update the image of exercise in base 64
+  let token = req.headers.token;
+  let data = req.body
+  console.log('update Exercise',data)
+  try{
+
+    jwt.verify(token, 'secret', { expiresIn: '30d' }, async function(err, decoded) {
+      if(err) {
+        return res.status(200).json({
+          response: {
+            result:'expiredTokenError',
+            message:'Votre token a expiré'
+          }
+        });
+       }else {
+
+
+       }
+    })
+  }catch(error){ return res.status(500).json(error.message) }
+})
+
+
+router.post('/updateVideosExercise', function(req, res) {
+  // here we gone to update the image of exercise in base 64
+  let token = req.headers.token;
+  let data = req.body
+  console.log('update Videos',data)
+  try{
+
+    jwt.verify(token, 'secret', { expiresIn: '30d' }, async function(err, decoded) {
+      if(err) {
+        return res.status(200).json({
+          response: {
+            result:'expiredTokenError',
+            message:'Votre token a expiré'
+          }
+        });
+       }else {
+
+
+       }
+    })
+  }catch(error){ return res.status(500).json(error.message) }
+})
+
 router.post('/updateExercise', function(req, res) {
   let token = req.headers.token;
   let data = req.body

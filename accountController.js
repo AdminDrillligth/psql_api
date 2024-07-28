@@ -804,34 +804,68 @@ router.post('/deleteUser', function(req, res) {
       console.log('le result du get user for owner : ; ',resultsOfAccountOfUser.rows[0].owner)
       ownerDataId = resultsOfAccountOfUser.rows[0].owner
       accountUser = resultsOfAccountOfUser.rows[0]
-      pool.query('SELECT * FROM account_handler WHERE id = $1',[resultsOfAccountOfUser.rows[0].owner], async (error, resultsOfAccountOfOwner) => {
-        if (error) {
-          console.log('error no account: ! ', error)
-        }
-        // console.log('le result du get owner : ; ',resultsOfAccountOfOwner.rows[0])
-        console.log('le result du get owner : ; ',resultsOfAccountOfOwner.rows)
-        accountOwner = resultsOfAccountOfOwner.rows[0]
-        accountOwner.users.forEach((user, index)=>{
-          if(user.id === data.id ){
-            console.log('le log user MEME ID ::',user.id,  data.id, index)
-            accountOwner.users.splice(index, 1);
-            console.log('New array',accountOwner.users)
-          }
-          console.log('New array',accountOwner.users)
-  
-          console.log('New array',accountOwner.id)
-          pool.query('UPDATE account_handler SET users = $1 WHERE id = $2',
-          [ accountOwner.users, accountOwner.id ],
-          (error, resultsUpdatedAccount) => {
+        if(accountUser.role === 'user' || accountUser.role === 'staff'){
+          pool.query('SELECT * FROM account_handler WHERE id = $1',[resultsOfAccountOfUser.rows[0].owner], async (error, resultsOfAccountOfOwner) => {
             if (error) {
-              throw error
+              console.log('error no account: ! ', error)
             }
-            console.log('User deleted with ID:',resultsUpdatedAccount)
-            
-      })
-      })
-    })
-    
+            // console.log('le result du get owner : ; ',resultsOfAccountOfOwner.rows[0])
+            console.log('le result du get owner : ; ',resultsOfAccountOfOwner.rows)
+            accountOwner = resultsOfAccountOfOwner.rows[0]
+            if(accountUser.role === "user"){
+              accountOwner.users.forEach((user, index)=>{
+                if(user.id === data.id ){
+                  console.log('le log user MEME ID ::',user.id,  data.id, index)
+                  accountOwner.users.splice(index, 1);
+                  console.log('New array',accountOwner.users)
+                }
+                console.log('New array',accountOwner.users)
+        
+                console.log('New array',accountOwner.id)
+                pool.query('UPDATE account_handler SET users = $1 WHERE id = $2',
+                [ accountOwner.users, accountOwner.id ],
+                (error, resultsUpdatedAccount) => {
+                  if (error) {
+                    throw error
+                  }
+                  console.log('User deleted with ID:',resultsUpdatedAccount)
+                  
+                })
+              })
+            }
+            if(accountUser.role === "staff"){
+              accountOwner.staff.forEach((user, index)=>{
+                if(user.id === data.id ){
+                  console.log('le log user MEME ID ::',user.id,  data.id, index)
+                  accountOwner.staff.splice(index, 1);
+                  console.log('New array',accountOwner.staff)
+                }
+                console.log('New array',accountOwner.staff)
+        
+                console.log('New array',accountOwner.id)
+                pool.query('UPDATE account_handler SET staff = $1 WHERE id = $2',
+                [ accountOwner.staff, accountOwner.id ],
+                (error, resultsUpdatedAccount) => {
+                  if (error) {
+                    throw error
+                  }
+                  console.log('User deleted with ID:',resultsUpdatedAccount)
+                  
+                })
+              })
+            }
+      
+        })
+      }else{
+        console.log('c\'est un owner ou un admin')
+        pool.query('SELECT * FROM account_handler WHERE id = $1',[data.id], async (error, resultsOfAccountOfOwnerOrAdmin) => {
+          if (error) {
+            console.log('error no account: ! ', error)
+          }
+          console.log('Results : ',resultsOfAccountOfOwnerOrAdmin)
+        })
+      }
+      
 
 
     //   pool.query('DELETE FROM account_handler WHERE id = $1', [data.id], (error, resultsOfDeleteAccount) => {
